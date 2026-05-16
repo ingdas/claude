@@ -796,7 +796,6 @@ function loadState() {
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ entries, nextId }));
-  scheduledPublish();
 }
 
 
@@ -1385,8 +1384,6 @@ function toast(msg) {
 let username = localStorage.getItem('esc_username') || '';
 let room     = localStorage.getItem('esc_room')     || '';
 let peers    = {};          // { name: { ts, entries: {id: scores} } }
-let sseSource = null;
-let publishTimerId;
 let compareSortUser = null; // null = sort by own total, string = sort by that user's total, 'avg' = sort by average
 
 const NTFY_BASE = 'https://ntfy.ingel.ing';
@@ -1409,6 +1406,24 @@ function handleIncomingPayload(payload) {
   }
 }
 
+function setSyncStatus() {
+  const dot      = document.getElementById('sync-dot');
+  const label    = document.getElementById('sync-label');
+  const pushBtn  = document.getElementById('btn-force-sync');
+  const fetchBtn = document.getElementById('btn-force-fetch');
+  if (username) {
+    dot.className = 'ok';
+    label.textContent = `Syncing as ${username} · Room: ${ntfyTopic()}`;
+    pushBtn.style.display  = '';
+    fetchBtn.style.display = '';
+  } else {
+    dot.className = 'dim';
+    label.textContent = 'Not syncing — click ⚙ Sync to set username';
+    pushBtn.style.display  = 'none';
+    fetchBtn.style.display = 'none';
+  }
+}
+
 function pollHistory() {
   const since = Math.floor((Date.now() - PEER_TTL) / 1000);
   return fetch(`${NTFY_BASE}/${ntfyTopic()}/json?since=${since}&poll=1`)
@@ -1427,41 +1442,8 @@ function pollHistory() {
     .catch(() => {});
 }
 
-function connectSSE() {
-  if (sseSource) { sseSource.close(); sseSource = null; }
-  if (!username) return;
-
-  setSyncStatus('connecting');
-
-  // Fetch recent messages to catch peers who already submitted
-  pollHistory();
-
-  let connected = false;
-  sseSource = new EventSource(`${NTFY_BASE}/${ntfyTopic()}/sse`);
-
-  sseSource.addEventListener('open', () => {
-    setSyncStatus('ok');
-    // On reconnect (not the initial open), re-poll to catch messages missed during the gap
-    if (connected) pollHistory();
-    connected = true;
-  });
-  sseSource.addEventListener('error', () => setSyncStatus('err'));
-
-  sseSource.addEventListener('message', (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      if (data.event !== 'message') return;
-      const payload = JSON.parse(data.message);
-      handleIncomingPayload(payload);
-      expirePeers();
-      updatePeerChip();
-      if (currentView === 'compare') renderCompare();
-    } catch {}
-  });
-}
-
 function publishNow(attempt = 0) {
-  if (!username || !sseSource) return;
+  if (!username) return;
   const payload = { username, ts: Date.now(), entries: {} };
   entries.forEach(e => { payload.entries[e.id] = e.scores; });
   fetch(`${NTFY_BASE}/${ntfyTopic()}?title=${encodeURIComponent(username)}&tags=musical_note`, {
@@ -1478,37 +1460,11 @@ function publishNow(attempt = 0) {
   }).catch(err => toast(`Sync error: ${err.message}`));
 }
 
-function scheduledPublish() {
-  clearTimeout(publishTimerId);
-  publishTimerId = setTimeout(publishNow, 5000);
-}
-
 function expirePeers() {
   const now = Date.now();
   Object.keys(peers).forEach(k => { if (now - peers[k].ts > PEER_TTL) delete peers[k]; });
 }
 
-function setSyncStatus(state) {
-  const dot      = document.getElementById('sync-dot');
-  const label    = document.getElementById('sync-label');
-  const pushBtn  = document.getElementById('btn-force-sync');
-  const fetchBtn = document.getElementById('btn-force-fetch');
-  dot.className = 'dim';
-  const syncing = state === 'ok' || state === 'err' || state === 'connecting';
-  pushBtn.style.display  = syncing ? '' : 'none';
-  fetchBtn.style.display = syncing ? '' : 'none';
-  if (state === 'ok') {
-    dot.className = 'ok';
-    label.textContent = `Connected as ${username} · Room: ${ntfyTopic()}`;
-  } else if (state === 'err') {
-    dot.className = 'err';
-    label.textContent = 'Disconnected — retrying…';
-  } else if (state === 'connecting') {
-    label.textContent = `Connecting as ${username}…`;
-  } else {
-    label.textContent = 'Not syncing — click ⚙ Sync to join';
-  }
-}
 
 function updatePeerChip() {
   expirePeers();
@@ -1718,8 +1674,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
   localStorage.setItem('esc_room', room);
   document.getElementById('modal-settings').classList.remove('open');
   compareSortUser = null;
-  connectSSE();
-  publishNow();
+  setSyncStatus();
 });
 
 // Compare view
@@ -1782,8 +1737,7 @@ document.addEventListener('keydown', e => {
 
 loadState();
 render();
-if (username) connectSSE();
-else setSyncStatus('off');
+setSyncStatus();
 </script>
 </body>
 </html>
