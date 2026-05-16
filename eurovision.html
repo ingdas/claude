@@ -500,6 +500,9 @@
     .compare-table th:first-child { text-align: left; }
     .compare-table th { white-space: nowrap; }
     .compare-you { color: var(--accent2) !important; }
+    .compare-sort-active { text-decoration: underline; }
+    .compare-table th { cursor: pointer; user-select: none; }
+    .compare-table th:first-child { cursor: default; }
 
     /* ── Toast ── */
     .toast {
@@ -866,7 +869,7 @@ function createScorePicker(entry, category) {
   function refresh(hoverVal) {
     const cur = entry.scores[category];
     pips.forEach((pip, i) => {
-      const v = i + 1;
+      const v = i;
       pip.classList.remove('active', 'preview');
       if (hoverVal !== null) {
         if (v <= hoverVal) pip.classList.add('preview');
@@ -1244,7 +1247,18 @@ function renderRanking() {
   const list = document.getElementById('ranking-list');
   list.innerHTML = '';
 
-  const { scored, unscored } = getFilteredSorted();
+  // Always sort ranking by total score descending, regardless of sortBy
+  let all = [...entries];
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    all = all.filter(e =>
+      e.country.toLowerCase().includes(q) ||
+      e.act.toLowerCase().includes(q) ||
+      e.song.toLowerCase().includes(q)
+    );
+  }
+  const scored  = all.filter(hasScore).sort((a, b) => getTotal(b) - getTotal(a));
+  const unscored = all.filter(e => !hasScore(e)).sort((a, b) => a.runOrder - b.runOrder);
 
   if (!scored.length) {
     list.innerHTML = '<div class="ranking-empty">No scores yet.<br>Switch to <strong>Scoring</strong> to rate acts.</div>';
@@ -1371,6 +1385,7 @@ let room     = localStorage.getItem('esc_room')     || '';
 let peers    = {};          // { name: { ts, entries: {id: scores} } }
 let sseSource = null;
 let publishTimerId;
+let compareSortUser = null; // null = sort by own total, string = sort by that user's total, 'avg' = sort by average
 
 const NTFY_BASE = 'https://ntfy.ingel.ing';
 const PEER_TTL  = 6 * 60 * 60 * 1000; // 6 hours
@@ -1379,11 +1394,41 @@ function ntfyTopic() {
   return 'esc2026' + (room ? '-' + room.replace(/[^a-z0-9-]/gi, '-') : '');
 }
 
+function handleIncomingPayload(payload) {
+  if (!payload.username || payload.username === username) return;
+  const existing = peers[payload.username];
+  // Only update if this message is newer than what we already have
+  if (!existing || (payload.ts && payload.ts > (existing.ts || 0))) {
+    peers[payload.username] = { ts: payload.ts || Date.now(), entries: payload.entries || {} };
+  }
+}
+
 function connectSSE() {
   if (sseSource) { sseSource.close(); sseSource = null; }
   if (!username) return;
 
   setSyncStatus('connecting');
+
+  // Fetch recent messages to catch peers who already submitted
+  const since = Math.floor((Date.now() - PEER_TTL) / 1000);
+  fetch(`${NTFY_BASE}/${ntfyTopic()}/json?since=${since}&poll=1`)
+    .then(r => r.text())
+    .then(text => {
+      text.trim().split('\n').forEach(line => {
+        try {
+          const msg = JSON.parse(line);
+          if (msg.message) {
+            const payload = JSON.parse(msg.message);
+            handleIncomingPayload(payload);
+          }
+        } catch {}
+      });
+      expirePeers();
+      updatePeerChip();
+      if (currentView === 'compare') renderCompare();
+    })
+    .catch(() => {});
+
   sseSource = new EventSource(`${NTFY_BASE}/${ntfyTopic()}/sse`);
 
   sseSource.addEventListener('open', () => setSyncStatus('ok'));
@@ -1394,8 +1439,7 @@ function connectSSE() {
       const data = JSON.parse(e.data);
       if (data.event !== 'message') return;
       const payload = JSON.parse(data.message);
-      if (!payload.username || payload.username === username) return;
-      peers[payload.username] = { ts: Date.now(), entries: payload.entries || {} };
+      handleIncomingPayload(payload);
       expirePeers();
       updatePeerChip();
       if (currentView === 'compare') renderCompare();
@@ -1450,6 +1494,12 @@ function updatePeerChip() {
 
 // ─── Compare render ───────────────────────────────────────────────────────────
 
+function avgTotal(entryId, allUsers) {
+  const vals = allUsers.map(u => peerTotal(u, entryId)).filter(v => v !== null);
+  if (!vals.length) return null;
+  return vals.reduce((s, v) => s + v, 0) / vals.length;
+}
+
 function renderCompare() {
   const container = document.getElementById('compare-content');
   container.innerHTML = '';
@@ -1462,18 +1512,19 @@ function renderCompare() {
   expirePeers();
   const peerNames = Object.keys(peers);
 
-  if (!peerNames.length) {
-    container.innerHTML = `<p class="compare-empty">Waiting for others…<br><br>
-      Share this room name with friends: <strong>${ntfyTopic()}</strong><br>
-      They'll appear here once they've set the same room.</p>`;
-    return;
-  }
-
   const allUsers = [username, ...peerNames];
 
-  // Sort entries: by my total desc, unscored last
+  // Validate compareSortUser is still valid
+  if (compareSortUser !== null && compareSortUser !== 'avg' && !allUsers.includes(compareSortUser)) {
+    compareSortUser = null;
+  }
+
+  const effectiveSortUser = compareSortUser ?? username;
+
+  // Sort entries by chosen user's total desc (or average), unscored last
   const sorted = [...entries].sort((a, b) => {
-    const ta = peerTotal(username, a.id), tb = peerTotal(username, b.id);
+    const ta = effectiveSortUser === 'avg' ? avgTotal(a.id, allUsers) : peerTotal(effectiveSortUser, a.id);
+    const tb = effectiveSortUser === 'avg' ? avgTotal(b.id, allUsers) : peerTotal(effectiveSortUser, b.id);
     if (ta === null && tb === null) return a.runOrder - b.runOrder;
     if (ta === null) return 1;
     if (tb === null) return -1;
@@ -1485,12 +1536,40 @@ function renderCompare() {
   const table = document.createElement('table');
   table.className = 'scoring-table compare-table';
 
-  // Header row
+  // Header row — clickable to sort by that user's ranking
   const thead = document.createElement('thead');
   const htr = document.createElement('tr');
-  htr.innerHTML = '<th>Country</th>' + allUsers.map((u, i) =>
-    `<th${i === 0 ? ' class="compare-you"' : ''}>${escHtml(u)}${i === 0 ? ' ★' : ''}</th>`
-  ).join('');
+  const countryTh = document.createElement('th');
+  countryTh.textContent = 'Country';
+  htr.appendChild(countryTh);
+
+  allUsers.forEach((u, i) => {
+    const th = document.createElement('th');
+    th.style.cursor = 'pointer';
+    const isActive = compareSortUser === u || (compareSortUser === null && u === username);
+    th.className = (i === 0 ? 'compare-you' : '') + (isActive ? ' compare-sort-active' : '');
+    th.textContent = u + (i === 0 ? ' ★' : '') + (isActive ? ' ▼' : '');
+    th.title = `Sort by ${u}'s ranking`;
+    th.addEventListener('click', () => {
+      compareSortUser = u;
+      renderCompare();
+    });
+    htr.appendChild(th);
+  });
+
+  // Average column header
+  const avgTh = document.createElement('th');
+  avgTh.style.cursor = 'pointer';
+  const avgActive = compareSortUser === 'avg';
+  avgTh.className = avgActive ? 'compare-sort-active' : '';
+  avgTh.textContent = 'Avg' + (avgActive ? ' ▼' : '');
+  avgTh.title = 'Sort by global average';
+  avgTh.addEventListener('click', () => {
+    compareSortUser = 'avg';
+    renderCompare();
+  });
+  htr.appendChild(avgTh);
+
   thead.appendChild(htr);
   table.appendChild(thead);
 
@@ -1498,10 +1577,8 @@ function renderCompare() {
   const tbody = document.createElement('tbody');
   sorted.forEach(entry => {
     const tr = document.createElement('tr');
-    const sub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' · ');
     tr.innerHTML = `<td><div class="country-cell"><span class="flag">${entry.flag}</span>
-      <div><span class="country-name">${escHtml(entry.country)}</span>
-      ${sub ? `<span class="country-sub" style="display:block"> ${escHtml(sub)}</span>` : ''}</div></div></td>`;
+      <span class="country-name">${escHtml(entry.country)}</span></div></td>`;
 
     allUsers.forEach((user, i) => {
       const td = document.createElement('td');
@@ -1516,11 +1593,31 @@ function renderCompare() {
       tr.appendChild(td);
     });
 
+    // Average cell
+    const avgTd = document.createElement('td');
+    const av = avgTotal(entry.id, allUsers);
+    if (av === null) {
+      avgTd.innerHTML = '<span style="color:var(--muted)">—</span>';
+    } else {
+      avgTd.textContent = av % 1 === 0 ? av : av.toFixed(1);
+      avgTd.style.fontWeight = '700';
+      avgTd.style.color = totalColor(Math.round(av));
+    }
+    tr.appendChild(avgTd);
+
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   wrap.appendChild(table);
   container.appendChild(wrap);
+
+  if (!peerNames.length) {
+    const note = document.createElement('p');
+    note.className = 'compare-empty';
+    note.style.marginTop = '1.5rem';
+    note.innerHTML = `No one else here yet — share this room name: <strong>${ntfyTopic()}</strong>`;
+    container.appendChild(note);
+  }
 }
 
 function peerTotal(user, entryId) {
@@ -1593,6 +1690,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
   localStorage.setItem('esc_username', username);
   localStorage.setItem('esc_room', room);
   document.getElementById('modal-settings').classList.remove('open');
+  compareSortUser = null;
   connectSSE();
   publishNow();
 });
