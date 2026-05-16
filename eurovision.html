@@ -1373,7 +1373,7 @@ let sseSource = null;
 let publishTimerId;
 
 const NTFY_BASE = 'https://ntfy.ingel.ing';
-const PEER_TTL  = 45 * 60 * 1000; // 45 min
+const PEER_TTL  = 6 * 60 * 60 * 1000; // 6 hours
 
 function ntfyTopic() {
   return 'esc2026' + (room ? '-' + room.replace(/[^a-z0-9-]/gi, '-') : '');
