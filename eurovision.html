@@ -611,6 +611,7 @@
   <span id="sync-dot">⬤</span>
   <span id="sync-label">Not syncing — click ⚙ Sync to join</span>
   <span id="sync-peers"></span>
+  <button id="btn-force-sync" title="Force push scores to ntfy" style="margin-left:auto;padding:0.15rem 0.5rem;font-size:0.7rem;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;cursor:pointer;display:none">↑ Push</button>
 </div>
 
 <div class="controls">
@@ -1475,17 +1476,22 @@ function expirePeers() {
 function setSyncStatus(state) {
   const dot   = document.getElementById('sync-dot');
   const label = document.getElementById('sync-label');
+  const pushBtn = document.getElementById('btn-force-sync');
   dot.className = 'dim';
   if (state === 'ok') {
     dot.className = 'ok';
     label.textContent = `Connected as ${username} · Room: ${ntfyTopic()}`;
+    pushBtn.style.display = '';
   } else if (state === 'err') {
     dot.className = 'err';
     label.textContent = 'Disconnected — retrying…';
+    pushBtn.style.display = '';
   } else if (state === 'connecting') {
     label.textContent = `Connecting as ${username}…`;
+    pushBtn.style.display = '';
   } else {
     label.textContent = 'Not syncing — click ⚙ Sync to join';
+    pushBtn.style.display = 'none';
   }
 }
 
@@ -1710,6 +1716,11 @@ document.getElementById('btn-view-compare').addEventListener('click', () => {
   document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-view-compare').classList.add('active');
   renderCompare();
+});
+
+document.getElementById('btn-force-sync').addEventListener('click', () => {
+  publishNow();
+  toast('Scores pushed to ntfy');
 });
 
 document.getElementById('btn-export').addEventListener('click', () => {
