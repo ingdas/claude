@@ -239,9 +239,10 @@
     tr.is-playing td { background: rgba(34,197,94,0.05) !important; }
     tr.is-playing td:first-child { border-left: 3px solid var(--green); }
 
-    .country-cell { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
-    .flag { font-size: 1.2rem; line-height: 1; }
-    .country-name { font-weight: 600; font-size: 0.82rem; }
+    .country-cell { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; overflow: hidden; }
+    .flag { font-size: 1.2rem; line-height: 1; flex-shrink: 0; }
+    .country-name { font-weight: 600; font-size: 0.82rem; flex-shrink: 0; }
+    .country-sub { font-size: 0.75rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 
     .editable {
       background: transparent;
@@ -317,29 +318,14 @@
       color: var(--muted);
       min-width: 1.25rem;
       text-align: center;
+      flex-shrink: 0;
     }
     .card-run-order.medal { font-size: 1rem; }
-    .card-flag { font-size: 1.5rem; line-height: 1; }
-    .card-country-name { font-weight: 700; font-size: 0.95rem; flex: 1; }
+    .card-flag { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+    .card-country-info { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .card-country-name { font-weight: 700; font-size: 0.9rem; }
+    .card-country-sub { font-size: 0.75rem; color: var(--muted); }
     .card-header-actions { display: flex; gap: 0.35rem; align-items: center; flex-shrink: 0; }
-
-    .card-fields {
-      padding: 0.5rem 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .card-fields .editable {
-      min-width: 0;
-      font-size: 0.82rem;
-      padding: 0.3rem 0.4rem;
-    }
-    .card-fields .editable.song-field {
-      color: var(--muted);
-      font-style: italic;
-    }
-    .card-fields .editable.song-field:focus { color: var(--text); font-style: normal; }
 
     .card-scores { padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.4rem; }
 
@@ -584,7 +570,7 @@
     <span class="stat-value" id="stat-avg-act">—</span>
   </div>
   <div class="stat">
-    <span class="stat-label">Avg 🎤 Singing</span>
+    <span class="stat-label">Avg 🎤 Perf.</span>
     <span class="stat-value" id="stat-avg-sing">—</span>
   </div>
 </div>
@@ -604,15 +590,13 @@
     <option value="country">Country A–Z</option>
     <option value="song">Song Score</option>
     <option value="act">Act Score</option>
-    <option value="singing">Singing Score</option>
+    <option value="singing">Performance Score</option>
   </select>
   <div class="view-toggle">
     <button id="btn-view-score" class="active">Scoring</button>
     <button id="btn-view-rank">Ranking</button>
   </div>
-  <div class="controls-right">
-    <button class="btn btn-ghost" id="btn-add">+ Add</button>
-  </div>
+  <div class="controls-right"></div>
 </div>
 
 <div class="main">
@@ -625,12 +609,10 @@
           <tr>
             <th class="sortable" data-sort="runorder">#</th>
             <th>▶</th>
-            <th>Country</th>
-            <th>Act / Artist</th>
-            <th>Song Title</th>
+            <th>Country · Artist · Song</th>
             <th class="sortable th-song" data-sort="song">♪ Song</th>
             <th class="sortable th-act"  data-sort="act">🎭 Act</th>
-            <th class="sortable th-sing" data-sort="singing">🎤 Singing</th>
+            <th class="sortable th-sing" data-sort="singing">🎤 Perf.</th>
             <th>Total</th>
             <th>Notes</th>
             <th></th>
@@ -674,34 +656,6 @@
   </div>
 </div>
 
-<!-- Add entry modal -->
-<div class="modal-backdrop" id="modal-add">
-  <div class="modal">
-    <h2>Add Entry</h2>
-    <div class="form-group">
-      <div class="form-field">
-        <label class="form-label">Flag emoji</label>
-        <input class="form-input" id="add-flag" placeholder="🏳️" maxlength="8">
-      </div>
-      <div class="form-field">
-        <label class="form-label">Country / Name *</label>
-        <input class="form-input" id="add-country" placeholder="e.g. Sweden">
-      </div>
-      <div class="form-field">
-        <label class="form-label">Artist (optional)</label>
-        <input class="form-input" id="add-act" placeholder="Artist name">
-      </div>
-      <div class="form-field">
-        <label class="form-label">Song title (optional)</label>
-        <input class="form-input" id="add-song" placeholder="Song title">
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-primary" id="btn-confirm-add">Add</button>
-      <button class="btn btn-ghost modal-close">Cancel</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -878,7 +832,6 @@ function createScorePicker(entry, category) {
     pip.dataset.val = i;
     pip.textContent = i;
     pip.addEventListener('mouseenter', () => refresh(i));
-    pip.addEventListener('touchstart', (e) => { e.preventDefault(); refresh(i); }, { passive: false });
     pip.addEventListener('click', () => {
       const cur = entry.scores[category];
       entry.scores[category] = (cur === i) ? null : i;
@@ -964,20 +917,11 @@ function renderTable() {
     nowTd.appendChild(nowBtn);
     tr.appendChild(nowTd);
 
-    // Country
+    // Country + act + song (one line)
     const ctryTd = document.createElement('td');
-    ctryTd.innerHTML = `<div class="country-cell"><span class="flag">${entry.flag}</span><span class="country-name">${escHtml(entry.country)}</span></div>`;
+    const sub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' · ');
+    ctryTd.innerHTML = `<div class="country-cell"><span class="flag">${entry.flag}</span><span class="country-name">${escHtml(entry.country)}</span>${sub ? `<span class="country-sub">· ${escHtml(sub)}</span>` : ''}</div>`;
     tr.appendChild(ctryTd);
-
-    // Act
-    const actTd = document.createElement('td');
-    actTd.appendChild(makeEditable(entry, 'act', 'Artist…'));
-    tr.appendChild(actTd);
-
-    // Song
-    const songTd = document.createElement('td');
-    songTd.appendChild(makeEditable(entry, 'song', 'Song…'));
-    tr.appendChild(songTd);
 
     // Scores
     ['song', 'act', 'singing'].forEach(cat => {
@@ -1042,7 +986,7 @@ function renderTable() {
     if (scored.length > 0) {
       const sep = document.createElement('tr');
       sep.className = 'section-sep';
-      sep.innerHTML = `<td colspan="11">Not yet scored — ${unscored.length} remaining</td>`;
+      sep.innerHTML = `<td colspan="9">Not yet scored — ${unscored.length} remaining</td>`;
       tbody.appendChild(sep);
     }
     unscored.forEach(e => addRow(e, null));
@@ -1079,16 +1023,14 @@ function renderCards() {
   container.innerHTML = '';
 
   const { scored, unscored } = getFilteredSorted();
-  const allEntries = sortBy === 'runorder' ? scored : [...scored, ...unscored];
-
-  const rankedIds = new Set(scored.map(e => e.id));
+  const isRunOrder = sortBy === 'runorder';
   const rankMap = {};
   scored.forEach((e, i) => rankMap[e.id] = i + 1);
 
-  allEntries.forEach(entry => {
-    const rank = rankedIds.has(entry.id) && sortBy !== 'runorder' ? rankMap[entry.id] : null;
+  function appendCard(entry, rank) {
     const card = document.createElement('div');
     card.className = 'entry-card' + (entry.id === playingId ? ' is-playing' : '');
+    container.appendChild(card);
 
     // Header
     const header = document.createElement('div');
@@ -1107,9 +1049,10 @@ function renderCards() {
     flagEl.className = 'card-flag';
     flagEl.textContent = entry.flag;
 
-    const nameEl = document.createElement('span');
-    nameEl.className = 'card-country-name';
-    nameEl.textContent = entry.country;
+    const nameEl = document.createElement('div');
+    nameEl.className = 'card-country-info';
+    const cardSub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' · ');
+    nameEl.innerHTML = `<span class="card-country-name">${escHtml(entry.country)}</span>${cardSub ? `<span class="card-country-sub"> · ${escHtml(cardSub)}</span>` : ''}`;
 
     const actions = document.createElement('div');
     actions.className = 'card-header-actions';
@@ -1142,44 +1085,14 @@ function renderCards() {
     header.appendChild(actions);
     card.appendChild(header);
 
-    // Fields
-    const fields = document.createElement('div');
-    fields.className = 'card-fields';
-
-    const actInput = document.createElement('input');
-    actInput.type = 'text';
-    actInput.className = 'editable';
-    actInput.value = entry.act;
-    actInput.placeholder = 'Artist name…';
-    let t1;
-    actInput.addEventListener('input', e => {
-      entry.act = e.target.value;
-      clearTimeout(t1); t1 = setTimeout(() => { save(); updateStats(); }, 400);
-    });
-
-    const songInput = document.createElement('input');
-    songInput.type = 'text';
-    songInput.className = 'editable song-field';
-    songInput.value = entry.song;
-    songInput.placeholder = 'Song title…';
-    let t2;
-    songInput.addEventListener('input', e => {
-      entry.song = e.target.value;
-      clearTimeout(t2); t2 = setTimeout(() => { save(); updateStats(); }, 400);
-    });
-
-    fields.appendChild(actInput);
-    fields.appendChild(songInput);
-    card.appendChild(fields);
-
     // Scores
     const scoresDiv = document.createElement('div');
     scoresDiv.className = 'card-scores';
 
     [
-      { cat: 'song',    emoji: '♪', label: 'Song',    cls: 'song-lbl' },
-      { cat: 'act',     emoji: '🎭', label: 'Act',     cls: 'act-lbl'  },
-      { cat: 'singing', emoji: '🎤', label: 'Singing', cls: 'sing-lbl' },
+      { cat: 'song',    label: 'Song', cls: 'song-lbl' },
+      { cat: 'act',     label: 'Act',  cls: 'act-lbl'  },
+      { cat: 'singing', label: 'Perf', cls: 'sing-lbl' },
     ].forEach(({ cat, label, cls }) => {
       const row = document.createElement('div');
       row.className = 'score-row';
@@ -1225,17 +1138,19 @@ function renderCards() {
     footer.appendChild(notesInput);
     card.appendChild(footer);
 
-    container.appendChild(card);
-  });
+  }
 
-  // Separator for unscored when ranked
-  if (sortBy !== 'runorder' && unscored.length && scored.length) {
-    const sep = document.createElement('div');
-    sep.style.cssText = 'font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin:0.25rem 0;';
-    sep.textContent = `Not yet scored — ${unscored.length} remaining`;
-    // Insert before unscored cards (already appended above); need different approach
-    // Actually the separator needs to appear between scored and unscored in the card view
-    // Since both groups are appended above already, let's rebuild:
+  if (isRunOrder) {
+    scored.forEach(e => appendCard(e, null));
+  } else {
+    scored.forEach(e => appendCard(e, rankMap[e.id]));
+    if (unscored.length && scored.length) {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin:0.25rem 0;padding:0 0.25rem;';
+      sep.textContent = `Not yet scored — ${unscored.length} remaining`;
+      container.appendChild(sep);
+    }
+    unscored.forEach(e => appendCard(e, null));
   }
 }
 
@@ -1274,6 +1189,7 @@ function renderRanking() {
         <span class="score-tag song-tag">♪ <span class="val">${entry.scores.song ?? '—'}</span></span>
         <span class="score-tag act-tag">🎭 <span class="val">${entry.scores.act ?? '—'}</span></span>
         <span class="score-tag sing-tag">🎤 <span class="val">${entry.scores.singing ?? '—'}</span></span>
+
       </div>
       <div class="ranking-total" style="color:${totalColor(t)}">${t}</div>
     `;
@@ -1337,7 +1253,7 @@ function buildExport() {
     scored.forEach((e, i) => {
       lines.push(`${i + 1}. ${e.flag} ${e.country}`);
       if (e.act || e.song) lines.push(`   ${[e.act, e.song ? `"${e.song}"` : ''].filter(Boolean).join(' — ')}`);
-      lines.push(`   ♪ ${e.scores.song ?? '—'}  🎭 ${e.scores.act ?? '—'}  🎤 ${e.scores.singing ?? '—'}  |  Total: ${getTotal(e)}/30`);
+      lines.push(`   ♪ ${e.scores.song ?? '—'}  🎭 ${e.scores.act ?? '—'}  🎤 ${e.scores.singing ?? '—'}  |  Total: ${getTotal(e)}/30  (Song · Act · Performance)`);
       if (e.notes) lines.push(`   Notes: ${e.notes}`);
       lines.push('');
     });
@@ -1420,32 +1336,6 @@ document.getElementById('btn-confirm-reset').addEventListener('click', () => {
   toast('All scores cleared');
 });
 
-document.getElementById('btn-add').addEventListener('click', () => {
-  ['add-flag','add-country','add-act','add-song'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('modal-add').classList.add('open');
-  setTimeout(() => document.getElementById('add-country').focus(), 50);
-});
-
-document.getElementById('btn-confirm-add').addEventListener('click', () => {
-  const country = document.getElementById('add-country').value.trim();
-  if (!country) { document.getElementById('add-country').focus(); return; }
-  const flag = document.getElementById('add-flag').value.trim() || '🏳️';
-  const maxRun = Math.max(...entries.map(e => e.runOrder), 25);
-  entries.push({
-    id: nextId++,
-    runOrder: maxRun + 1,
-    country, flag,
-    act: document.getElementById('add-act').value.trim(),
-    song: document.getElementById('add-song').value.trim(),
-    scores: { song: null, act: null, singing: null },
-    notes: '',
-  });
-  save(); render();
-  document.getElementById('modal-add').classList.remove('open');
-  toast(`${flag} ${country} added`);
-});
 
 document.querySelectorAll('.modal-backdrop').forEach(bd => {
   bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
