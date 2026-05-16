@@ -38,7 +38,7 @@
     header {
       background: linear-gradient(135deg, #13064a 0%, #06194a 100%);
       border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem;
+      padding: 0.9rem 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -48,12 +48,10 @@
       z-index: 100;
     }
 
-    .logo { display: flex; align-items: center; gap: 0.75rem; }
-
-    .logo-icon { font-size: 2rem; }
-
+    .logo { display: flex; align-items: center; gap: 0.6rem; }
+    .logo-icon { font-size: 1.75rem; }
     .logo h1 {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 800;
       background: linear-gradient(90deg, #ffd700, #a855f7, #6366f1);
       -webkit-background-clip: text;
@@ -61,40 +59,32 @@
       background-clip: text;
       white-space: nowrap;
     }
-
-    .logo sub {
-      display: block;
-      font-size: 0.7rem;
-      color: var(--muted);
-      -webkit-text-fill-color: var(--muted);
-    }
-
-    .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+    .logo sub { display: block; font-size: 0.65rem; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+    .header-actions { display: flex; gap: 0.4rem; align-items: center; flex-shrink: 0; }
 
     /* ── Stats bar ── */
     .stats-bar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 0.6rem 1.5rem;
+      padding: 0.5rem 1.25rem;
       display: flex;
-      gap: 1.5rem;
+      gap: 1.25rem;
       overflow-x: auto;
       scrollbar-width: none;
     }
     .stats-bar::-webkit-scrollbar { display: none; }
-
     .stat { display: flex; flex-direction: column; white-space: nowrap; }
-    .stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
-    .stat-value { font-size: 0.95rem; font-weight: 700; color: var(--gold); }
+    .stat-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .stat-value { font-size: 0.9rem; font-weight: 700; color: var(--gold); }
     .stat-value.dim { color: var(--muted); font-weight: 400; }
 
     /* ── Progress ── */
     .progress-wrap {
       background: var(--surface);
-      padding: 0 1.5rem 0.6rem;
+      padding: 0 1.25rem 0.5rem;
       border-bottom: 1px solid var(--border);
     }
-    .progress-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .progress-label { font-size: 0.65rem; color: var(--muted); margin-bottom: 0.25rem; }
     .progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
     .progress-fill {
       height: 100%;
@@ -105,39 +95,40 @@
 
     /* ── Controls ── */
     .controls {
-      padding: 0.75rem 1.5rem;
+      padding: 0.6rem 1.25rem;
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
       flex-wrap: wrap;
       align-items: center;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
     }
-
-    .controls-right { margin-left: auto; display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .controls-right { margin-left: auto; display: flex; gap: 0.4rem; flex-shrink: 0; }
 
     input[type="search"], select {
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.45rem 0.7rem;
+      padding: 0.4rem 0.65rem;
       border-radius: 0.5rem;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       outline: none;
       transition: border-color 0.15s;
+      font-family: inherit;
     }
-    input[type="search"] { width: 180px; }
+    input[type="search"] { width: 160px; }
     input[type="search"]:focus, select:focus { border-color: var(--accent); }
 
     .btn {
-      padding: 0.45rem 0.9rem;
+      padding: 0.4rem 0.8rem;
       border-radius: 0.5rem;
       border: none;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       transition: all 0.15s;
       white-space: nowrap;
+      font-family: inherit;
     }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: #5558e8; }
@@ -145,7 +136,6 @@
     .btn-ghost:hover { background: var(--surface2); color: var(--text); }
     .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
     .btn-danger:hover { background: var(--red); color: #fff; }
-    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
 
     .view-toggle {
       display: flex;
@@ -154,109 +144,23 @@
       overflow: hidden;
     }
     .view-toggle button {
-      padding: 0.45rem 0.75rem;
+      padding: 0.4rem 0.7rem;
       background: transparent;
       border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       transition: all 0.15s;
+      font-family: inherit;
     }
     .view-toggle button.active { background: var(--accent); color: #fff; }
 
     /* ── Main ── */
-    .main { padding: 1.25rem 1.5rem; max-width: 1500px; margin: 0 auto; }
+    .main { padding: 1rem 1.25rem; max-width: 1500px; margin: 0 auto; }
 
-    /* ── Scoring Table ── */
-    .table-wrap { overflow-x: auto; }
-
-    .scoring-table { width: 100%; border-collapse: collapse; }
-
-    .scoring-table th {
-      text-align: left;
-      padding: 0.6rem 0.75rem;
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      border-bottom: 2px solid var(--border);
-      white-space: nowrap;
-      user-select: none;
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-    }
-
-    .scoring-table th.sortable { cursor: pointer; }
-    .scoring-table th.sortable:hover { color: var(--text); }
-    .scoring-table th.sort-asc::after { content: " ▲"; font-size: 0.6em; color: var(--accent); }
-    .scoring-table th.sort-desc::after { content: " ▼"; font-size: 0.6em; color: var(--accent); }
-    .scoring-table th.active-sort { color: var(--accent); }
-
-    .scoring-table td {
-      padding: 0.4rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    .scoring-table tr:hover td { background: rgba(99,102,241,0.05); }
-
-    .th-song { color: var(--song-c) !important; }
-    .th-act  { color: var(--act-c)  !important; }
-    .th-sing { color: var(--sing-c) !important; }
-
-    /* rank */
-    .rank-cell {
-      text-align: center;
-      font-weight: 800;
-      font-size: 1rem;
-      width: 2.5rem;
-      padding-right: 0.5rem;
-    }
-
-    /* now-playing */
-    .now-playing-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 0.375rem;
-      cursor: pointer;
-      font-size: 0.85rem;
-      padding: 0.15rem 0.3rem;
-      transition: all 0.15s;
-      line-height: 1;
-    }
-    .now-playing-btn.active { background: #22c55e22; border-color: var(--green); color: var(--green); }
-    tr.is-playing td { background: rgba(34,197,94,0.05) !important; }
-    tr.is-playing td:first-child { border-left: 3px solid var(--green); }
-
-    /* country */
-    .country-cell { display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
-    .flag { font-size: 1.3rem; line-height: 1; }
-    .country-name { font-weight: 600; font-size: 0.85rem; }
-
-    /* editable input */
-    .editable {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text);
-      padding: 0.25rem 0.4rem;
-      border-radius: 0.375rem;
-      font-size: 0.8rem;
-      width: 100%;
-      min-width: 90px;
-      transition: border-color 0.15s, background 0.15s;
-      font-family: inherit;
-    }
-    .editable:hover { border-color: var(--border); }
-    .editable:focus { border-color: var(--accent); outline: none; background: var(--surface2); }
-    .editable::placeholder { color: var(--muted); font-style: italic; }
-
-    /* score picker */
-    .score-cell { min-width: 130px; }
-
-    .score-picker { display: flex; gap: 2px; align-items: center; }
+    /* ── Shared: Score Pips ── */
+    .score-picker { display: flex; gap: 2px; }
 
     .score-pip {
       width: 17px;
@@ -268,69 +172,118 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 700;
       color: var(--muted);
       transition: all 0.08s;
       user-select: none;
       flex-shrink: 0;
     }
-
-    .score-pip.active {
-      color: #fff;
-      border-color: currentColor;
-    }
-    .score-pip.preview {
-      opacity: 0.55;
-      color: #fff;
-      border-color: currentColor;
-    }
-
-    .score-category-song .score-pip.active,
-    .score-category-song .score-pip.preview { background: var(--song-c); }
-    .score-category-act .score-pip.active,
-    .score-category-act .score-pip.preview  { background: var(--act-c); }
+    .score-pip.active  { color: #fff; border-color: currentColor; }
+    .score-pip.preview { opacity: 0.55; color: #fff; border-color: currentColor; }
+    .score-category-song    .score-pip.active,
+    .score-category-song    .score-pip.preview { background: var(--song-c); }
+    .score-category-act     .score-pip.active,
+    .score-category-act     .score-pip.preview { background: var(--act-c); }
     .score-category-singing .score-pip.active,
     .score-category-singing .score-pip.preview { background: var(--sing-c); }
 
-    /* total */
-    .total-cell { text-align: center; font-size: 1.1rem; font-weight: 800; width: 3rem; }
-    .total-none { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+    /* ── Desktop table ── */
+    .table-wrap { overflow-x: auto; }
 
-    /* clear row */
-    .clear-row-btn {
+    .scoring-table { width: 100%; border-collapse: collapse; }
+
+    .scoring-table th {
+      text-align: left;
+      padding: 0.55rem 0.65rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      user-select: none;
+      background: var(--bg);
+    }
+    .scoring-table th.sortable { cursor: pointer; }
+    .scoring-table th.sortable:hover { color: var(--text); }
+    .scoring-table th.sort-desc::after { content: " ▼"; font-size: 0.6em; color: var(--accent); }
+    .scoring-table th.sort-asc::after  { content: " ▲"; font-size: 0.6em; color: var(--accent); }
+    .scoring-table th.active-sort { color: var(--accent); }
+
+    .scoring-table td {
+      padding: 0.35rem 0.65rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .scoring-table tr:hover td { background: rgba(99,102,241,0.05); }
+
+    .th-song { color: var(--song-c) !important; }
+    .th-act  { color: var(--act-c)  !important; }
+    .th-sing { color: var(--sing-c) !important; }
+
+    .rank-cell { text-align: center; font-weight: 800; font-size: 0.95rem; width: 2.25rem; }
+
+    .now-playing-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 0.3rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.12rem 0.28rem;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+    .now-playing-btn.active { background: #22c55e22; border-color: var(--green); color: var(--green); }
+    tr.is-playing td { background: rgba(34,197,94,0.05) !important; }
+    tr.is-playing td:first-child { border-left: 3px solid var(--green); }
+
+    .country-cell { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+    .flag { font-size: 1.2rem; line-height: 1; }
+    .country-name { font-weight: 600; font-size: 0.82rem; }
+
+    .editable {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text);
+      padding: 0.2rem 0.35rem;
+      border-radius: 0.35rem;
+      font-size: 0.78rem;
+      width: 100%;
+      min-width: 80px;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+    .editable:hover { border-color: var(--border); }
+    .editable:focus { border-color: var(--accent); outline: none; background: var(--surface2); }
+    .editable::placeholder { color: var(--muted); font-style: italic; }
+
+    .score-cell { min-width: 122px; }
+
+    .total-cell { text-align: center; font-size: 1.05rem; font-weight: 800; width: 2.75rem; }
+    .total-none { color: var(--muted); font-size: 0.78rem; font-weight: 400; }
+
+    .clear-row-btn, .delete-row-btn {
       background: none;
       border: none;
-      color: var(--muted);
       cursor: pointer;
-      font-size: 0.9rem;
-      padding: 0.2rem 0.3rem;
+      padding: 0.15rem 0.25rem;
       border-radius: 0.25rem;
       opacity: 0;
       transition: opacity 0.15s, color 0.15s;
+      font-size: 0.85rem;
     }
-    tr:hover .clear-row-btn { opacity: 1; }
-    .clear-row-btn:hover { color: var(--red); }
-
-    /* delete row */
-    .delete-row-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-      padding: 0.2rem 0.3rem;
-      border-radius: 0.25rem;
-      opacity: 0;
-      transition: opacity 0.15s, color 0.15s;
-    }
+    .clear-row-btn { color: var(--muted); }
+    .delete-row-btn { color: var(--muted); }
+    tr:hover .clear-row-btn,
     tr:hover .delete-row-btn { opacity: 1; }
+    .clear-row-btn:hover { color: var(--accent2); }
     .delete-row-btn:hover { color: var(--red); }
 
-    /* section divider */
     .section-sep td {
-      padding: 0.4rem 0.75rem;
-      font-size: 0.65rem;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.62rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
       color: var(--muted);
@@ -338,19 +291,102 @@
       border-top: 1px solid var(--border);
     }
 
-    /* ── Ranking View ── */
+    /* ── Mobile card view ── */
+    #card-view { display: none; flex-direction: column; gap: 0.75rem; }
+
+    .entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .entry-card.is-playing { border-color: var(--green); }
+    .entry-card.is-playing .card-header { background: rgba(34,197,94,0.07); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 0.85rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-run-order {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--muted);
+      min-width: 1.25rem;
+      text-align: center;
+    }
+    .card-run-order.medal { font-size: 1rem; }
+    .card-flag { font-size: 1.5rem; line-height: 1; }
+    .card-country-name { font-weight: 700; font-size: 0.95rem; flex: 1; }
+    .card-header-actions { display: flex; gap: 0.35rem; align-items: center; flex-shrink: 0; }
+
+    .card-fields {
+      padding: 0.5rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-fields .editable {
+      min-width: 0;
+      font-size: 0.82rem;
+      padding: 0.3rem 0.4rem;
+    }
+    .card-fields .editable.song-field {
+      color: var(--muted);
+      font-style: italic;
+    }
+    .card-fields .editable.song-field:focus { color: var(--text); font-style: normal; }
+
+    .card-scores { padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .score-row { display: flex; align-items: center; gap: 0.5rem; }
+    .cat-label { font-size: 0.85rem; width: 1.4rem; flex-shrink: 0; text-align: center; }
+    .cat-text { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; width: 2.25rem; flex-shrink: 0; }
+    .cat-text.song-lbl { color: var(--song-c); }
+    .cat-text.act-lbl  { color: var(--act-c); }
+    .cat-text.sing-lbl { color: var(--sing-c); }
+
+    /* Mobile pips stretch to fill */
+    .card-scores .score-picker { flex: 1; }
+    .card-scores .score-pip {
+      flex: 1;
+      min-width: 0;
+      height: 30px;
+      width: auto;
+      font-size: 0.62rem;
+      border-radius: 4px;
+    }
+
+    .card-footer {
+      padding: 0.5rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .card-total {
+      font-size: 1.1rem;
+      font-weight: 800;
+      white-space: nowrap;
+      min-width: 4.5rem;
+    }
+    .card-notes { flex: 1; min-width: 0; font-size: 0.75rem; }
+
+    /* ── Ranking view ── */
     .ranking-list { display: flex; flex-direction: column; gap: 0.5rem; }
 
     .ranking-item {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 0.75rem;
-      padding: 0.9rem 1.25rem;
+      padding: 0.8rem 1.1rem;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      transition: border-color 0.2s, background 0.2s;
-      position: relative;
+      gap: 0.85rem;
+      transition: border-color 0.2s;
     }
     .ranking-item:hover { border-color: rgba(99,102,241,0.5); }
     .ranking-item.p1 { border-color: var(--gold); background: linear-gradient(135deg, #1c1800 0%, #0f0f2a 100%); }
@@ -358,32 +394,31 @@
     .ranking-item.p3 { border-color: var(--bronze); }
 
     .rank-badge {
-      width: 2.5rem;
-      height: 2.5rem;
+      width: 2.25rem;
+      height: 2.25rem;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       flex-shrink: 0;
     }
-    .rb-gold   { background: var(--gold); color: #000; }
+    .rb-gold   { background: var(--gold);   color: #000; }
     .rb-silver { background: var(--silver); color: #000; }
     .rb-bronze { background: var(--bronze); color: #fff; }
-    .rb-other  { background: var(--surface2); color: var(--muted); font-size: 0.85rem; }
+    .rb-other  { background: var(--surface2); color: var(--muted); }
 
-    .ranking-flag { font-size: 2rem; line-height: 1; flex-shrink: 0; }
-
+    .ranking-flag { font-size: 1.75rem; line-height: 1; flex-shrink: 0; }
     .ranking-info { flex: 1; min-width: 0; }
-    .ranking-country { font-weight: 700; font-size: 1rem; }
-    .ranking-sub { font-size: 0.78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ranking-country { font-weight: 700; font-size: 0.95rem; }
+    .ranking-sub { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .score-tags { display: flex; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; }
+    .score-tags { display: flex; gap: 0.35rem; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
     .score-tag {
-      font-size: 0.72rem;
-      padding: 0.18rem 0.5rem;
-      border-radius: 0.375rem;
+      font-size: 0.68rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.35rem;
       background: var(--surface2);
       color: var(--muted);
       white-space: nowrap;
@@ -393,19 +428,11 @@
     .score-tag.act-tag  .val { color: var(--act-c); }
     .score-tag.sing-tag .val { color: var(--sing-c); }
 
-    .ranking-total {
-      font-size: 1.8rem;
-      font-weight: 800;
-      min-width: 3rem;
-      text-align: right;
-      flex-shrink: 0;
-    }
-
-    .ranking-empty { text-align: center; padding: 4rem 2rem; color: var(--muted); font-size: 1rem; }
-
+    .ranking-total { font-size: 1.6rem; font-weight: 800; min-width: 2.75rem; text-align: right; flex-shrink: 0; }
+    .ranking-empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
     .ranking-unscored-label {
-      margin: 1rem 0 0.5rem;
-      font-size: 0.68rem;
+      margin: 0.75rem 0 0.35rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
       color: var(--muted);
@@ -429,86 +456,104 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 1rem;
-      padding: 1.75rem;
-      width: min(480px, 100%);
+      padding: 1.5rem;
+      width: min(460px, 100%);
       box-shadow: 0 25px 50px rgba(0,0,0,0.6);
     }
-    .modal h2 { font-size: 1.15rem; margin-bottom: 0.5rem; }
-    .modal p { color: var(--muted); font-size: 0.875rem; margin-top: 0.5rem; }
-    .modal-actions { display: flex; gap: 0.6rem; margin-top: 1.5rem; justify-content: flex-end; }
+    .modal h2 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+    .modal p { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
+    .modal-actions { display: flex; gap: 0.5rem; margin-top: 1.25rem; justify-content: flex-end; }
 
-    .form-group { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
-    .form-field { display: flex; flex-direction: column; gap: 0.25rem; }
-    .form-label { font-size: 0.75rem; color: var(--muted); }
+    .form-group { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.9rem; }
+    .form-field { display: flex; flex-direction: column; gap: 0.2rem; }
+    .form-label { font-size: 0.72rem; color: var(--muted); }
     .form-input {
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.5rem 0.7rem;
+      padding: 0.45rem 0.65rem;
       border-radius: 0.5rem;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-family: inherit;
       outline: none;
       transition: border-color 0.15s;
     }
     .form-input:focus { border-color: var(--accent); }
 
-    /* Export textarea */
     .export-area {
       width: 100%;
-      height: 200px;
+      height: 180px;
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 0.75rem;
+      padding: 0.65rem;
       border-radius: 0.5rem;
       font-family: monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       resize: vertical;
-      margin-top: 1rem;
+      margin-top: 0.9rem;
     }
 
     /* ── Toast ── */
     .toast {
       position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
+      bottom: 1.25rem;
+      right: 1.25rem;
       background: var(--surface);
       border: 1px solid var(--accent);
-      border-radius: 0.65rem;
-      padding: 0.65rem 1.1rem;
-      font-size: 0.85rem;
+      border-radius: 0.6rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.82rem;
       z-index: 300;
-      transform: translateY(80px);
+      transform: translateY(60px);
       opacity: 0;
       transition: transform 0.3s ease, opacity 0.3s ease;
       pointer-events: none;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
 
-    /* ── Responsive ── */
-    @media (max-width: 700px) {
-      header { padding: 0.75rem 1rem; }
-      .stats-bar { padding: 0.5rem 1rem; gap: 1rem; }
-      .progress-wrap { padding: 0 1rem 0.5rem; }
-      .controls { padding: 0.6rem 1rem; }
-      .main { padding: 1rem; }
-      input[type="search"] { width: 130px; }
-      .score-pip { width: 14px; height: 19px; font-size: 0.55rem; }
-      .score-cell { min-width: 108px; }
-      .editable { min-width: 70px; }
+    /* ── Responsive breakpoints ── */
+    @media (max-width: 720px) {
+      /* Hide desktop table, show mobile cards */
+      #view-score .table-wrap { display: none; }
+      #card-view { display: flex; }
+
+      /* Tighten header */
+      .logo h1 { font-size: 1rem; }
+      .logo-icon { font-size: 1.4rem; }
+      header { padding: 0.7rem 1rem; }
+
+      /* Stats bar smaller */
+      .stats-bar { padding: 0.4rem 1rem; gap: 1rem; }
+      .stat-value { font-size: 0.82rem; }
+
+      /* Controls */
+      .controls { padding: 0.5rem 1rem; gap: 0.4rem; }
+      input[type="search"] { width: 120px; }
+
+      /* Main */
+      .main { padding: 0.75rem 1rem; }
+
+      /* Ranking */
+      .score-tags { display: none; }
+      .ranking-item { padding: 0.65rem 0.85rem; gap: 0.65rem; }
+      .ranking-total { font-size: 1.3rem; }
+    }
+
+    @media (max-width: 400px) {
+      input[type="search"] { width: 90px; font-size: 0.72rem; }
+      select { font-size: 0.72rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <div class="logo">
     <span class="logo-icon">🎤</span>
     <div>
       <h1>Eurovision 2026</h1>
-      <sub>Personal Scoreboard</sub>
+      <sub>Grand Final · Vienna · Personal Scoreboard</sub>
     </div>
   </div>
   <div class="header-actions">
@@ -517,7 +562,6 @@
   </div>
 </header>
 
-<!-- Stats bar -->
 <div class="stats-bar">
   <div class="stat">
     <span class="stat-label">Scored</span>
@@ -545,23 +589,22 @@
   </div>
 </div>
 
-<!-- Progress bar -->
 <div class="progress-wrap">
-  <div class="progress-label" id="progress-label">0 of 0 acts scored</div>
+  <div class="progress-label" id="progress-label">0 of 25 acts scored</div>
   <div class="progress-track">
     <div class="progress-fill" id="progress-fill" style="width:0%"></div>
   </div>
 </div>
 
-<!-- Controls -->
 <div class="controls">
-  <input type="search" id="search" placeholder="Search country, act, song…">
+  <input type="search" id="search" placeholder="Search…">
   <select id="sort-sel">
-    <option value="rank">Sort: Ranking</option>
-    <option value="country">Sort: Country A–Z</option>
-    <option value="song">Sort: Song Score</option>
-    <option value="act">Sort: Act Score</option>
-    <option value="singing">Sort: Singing Score</option>
+    <option value="runorder">Running Order</option>
+    <option value="rank">Ranking</option>
+    <option value="country">Country A–Z</option>
+    <option value="song">Song Score</option>
+    <option value="act">Act Score</option>
+    <option value="singing">Singing Score</option>
   </select>
   <div class="view-toggle">
     <button id="btn-view-score" class="active">Scoring</button>
@@ -572,16 +615,15 @@
   </div>
 </div>
 
-<!-- Main -->
 <div class="main">
-
   <!-- Scoring view -->
   <div id="view-score">
+    <!-- Desktop table -->
     <div class="table-wrap">
       <table class="scoring-table">
         <thead>
           <tr>
-            <th>#</th>
+            <th class="sortable" data-sort="runorder">#</th>
             <th>▶</th>
             <th>Country</th>
             <th>Act / Artist</th>
@@ -597,23 +639,24 @@
         <tbody id="table-body"></tbody>
       </table>
     </div>
+    <!-- Mobile cards -->
+    <div id="card-view"></div>
   </div>
 
   <!-- Ranking view -->
   <div id="view-rank" style="display:none">
     <div class="ranking-list" id="ranking-list"></div>
   </div>
-
 </div>
 
 <!-- Export modal -->
 <div class="modal-backdrop" id="modal-export">
   <div class="modal">
     <h2>Export Results</h2>
-    <p>Copy your Eurovision 2026 scores to share or save.</p>
+    <p>Your Eurovision 2026 scores.</p>
     <textarea class="export-area" id="export-text" readonly></textarea>
     <div class="modal-actions">
-      <button class="btn btn-primary" id="btn-copy">Copy to Clipboard</button>
+      <button class="btn btn-primary" id="btn-copy">Copy</button>
       <button class="btn btn-ghost modal-close">Close</button>
     </div>
   </div>
@@ -623,7 +666,7 @@
 <div class="modal-backdrop" id="modal-reset">
   <div class="modal">
     <h2>Reset All Scores?</h2>
-    <p>This clears every score and note. Artist names and song titles will be kept.</p>
+    <p>Clears every score and note. Artist names and song titles are kept.</p>
     <div class="modal-actions">
       <button class="btn btn-danger" id="btn-confirm-reset">Clear All Scores</button>
       <button class="btn btn-ghost modal-close">Cancel</button>
@@ -631,11 +674,10 @@
   </div>
 </div>
 
-<!-- Add country modal -->
+<!-- Add entry modal -->
 <div class="modal-backdrop" id="modal-add">
   <div class="modal">
     <h2>Add Entry</h2>
-    <p>Add a country or custom act to the scoreboard.</p>
     <div class="form-group">
       <div class="form-field">
         <label class="form-label">Flag emoji</label>
@@ -647,93 +689,79 @@
       </div>
       <div class="form-field">
         <label class="form-label">Artist (optional)</label>
-        <input class="form-input" id="add-act" placeholder="e.g. Cornelia Jakobs">
+        <input class="form-input" id="add-act" placeholder="Artist name">
       </div>
       <div class="form-field">
         <label class="form-label">Song title (optional)</label>
-        <input class="form-input" id="add-song" placeholder="e.g. Hold Me Closer">
+        <input class="form-input" id="add-song" placeholder="Song title">
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-primary" id="btn-confirm-add">Add Entry</button>
+      <button class="btn btn-primary" id="btn-confirm-add">Add</button>
       <button class="btn btn-ghost modal-close">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── Data ───────────────────────────────────────────────────────────────────
+// ─── Grand Final Running Order ────────────────────────────────────────────────
 
-const STORAGE_KEY = 'eurovision2026_v1';
-const PLAYING_KEY = 'eurovision2026_playing';
-
-const DEFAULT_COUNTRIES = [
-  { country: "Albania",        flag: "🇦🇱" },
-  { country: "Armenia",        flag: "🇦🇲" },
-  { country: "Australia",      flag: "🇦🇺" },
-  { country: "Austria",        flag: "🇦🇹" },
-  { country: "Azerbaijan",     flag: "🇦🇿" },
-  { country: "Belgium",        flag: "🇧🇪" },
-  { country: "Croatia",        flag: "🇭🇷" },
-  { country: "Cyprus",         flag: "🇨🇾" },
-  { country: "Czechia",        flag: "🇨🇿" },
-  { country: "Denmark",        flag: "🇩🇰" },
-  { country: "Estonia",        flag: "🇪🇪" },
-  { country: "Finland",        flag: "🇫🇮" },
-  { country: "France",         flag: "🇫🇷" },
-  { country: "Georgia",        flag: "🇬🇪" },
-  { country: "Germany",        flag: "🇩🇪" },
-  { country: "Greece",         flag: "🇬🇷" },
-  { country: "Iceland",        flag: "🇮🇸" },
-  { country: "Ireland",        flag: "🇮🇪" },
-  { country: "Israel",         flag: "🇮🇱" },
-  { country: "Italy",          flag: "🇮🇹" },
-  { country: "Latvia",         flag: "🇱🇻" },
-  { country: "Lithuania",      flag: "🇱🇹" },
-  { country: "Luxembourg",     flag: "🇱🇺" },
-  { country: "Malta",          flag: "🇲🇹" },
-  { country: "Moldova",        flag: "🇲🇩" },
-  { country: "Montenegro",     flag: "🇲🇪" },
-  { country: "Netherlands",    flag: "🇳🇱" },
-  { country: "Norway",         flag: "🇳🇴" },
-  { country: "Poland",         flag: "🇵🇱" },
-  { country: "Portugal",       flag: "🇵🇹" },
-  { country: "Romania",        flag: "🇷🇴" },
-  { country: "San Marino",     flag: "🇸🇲" },
-  { country: "Serbia",         flag: "🇷🇸" },
-  { country: "Slovenia",       flag: "🇸🇮" },
-  { country: "Spain",          flag: "🇪🇸" },
-  { country: "Sweden",         flag: "🇸🇪" },
-  { country: "Switzerland",    flag: "🇨🇭" },
-  { country: "Ukraine",        flag: "🇺🇦" },
-  { country: "United Kingdom", flag: "🇬🇧" },
+const GRAND_FINAL = [
+  { runOrder:  1, country: "Denmark",        flag: "🇩🇰", act: "Søren Torpegaard Lund",            song: "Før Vi Går Hjem" },
+  { runOrder:  2, country: "Germany",        flag: "🇩🇪", act: "Sarah Engels",                     song: "Fire" },
+  { runOrder:  3, country: "Israel",         flag: "🇮🇱", act: "Noam Bettan",                      song: "Michelle" },
+  { runOrder:  4, country: "Belgium",        flag: "🇧🇪", act: "Essyla",                           song: "Dancing on the Ice" },
+  { runOrder:  5, country: "Albania",        flag: "🇦🇱", act: "Alis",                             song: "Nân" },
+  { runOrder:  6, country: "Greece",         flag: "🇬🇷", act: "Akylas",                           song: "Ferto" },
+  { runOrder:  7, country: "Ukraine",        flag: "🇺🇦", act: "LELÉKA",                           song: "Ridnym" },
+  { runOrder:  8, country: "Australia",      flag: "🇦🇺", act: "Delta Goodrem",                    song: "Eclipse" },
+  { runOrder:  9, country: "Serbia",         flag: "🇷🇸", act: "LAVINA",                           song: "Kraj Mene" },
+  { runOrder: 10, country: "Malta",          flag: "🇲🇹", act: "AIDAN",                            song: "Bella" },
+  { runOrder: 11, country: "Czechia",        flag: "🇨🇿", act: "Daniel Zizka",                     song: "CROSSROADS" },
+  { runOrder: 12, country: "Bulgaria",       flag: "🇧🇬", act: "DARA",                             song: "Bangaranga" },
+  { runOrder: 13, country: "Croatia",        flag: "🇭🇷", act: "LELEK",                            song: "Andromeda" },
+  { runOrder: 14, country: "United Kingdom", flag: "🇬🇧", act: "LOOK MUM NO COMPUTER",             song: "Eins, Zwei, Drei" },
+  { runOrder: 15, country: "France",         flag: "🇫🇷", act: "Monroe",                           song: "Regarde!" },
+  { runOrder: 16, country: "Moldova",        flag: "🇲🇩", act: "Satoshi",                          song: "Viva, Moldova!" },
+  { runOrder: 17, country: "Finland",        flag: "🇫🇮", act: "Linda Lampenius x Pete Parkkonen", song: "Liekinheitin" },
+  { runOrder: 18, country: "Poland",         flag: "🇵🇱", act: "ALICJA",                           song: "Pray" },
+  { runOrder: 19, country: "Lithuania",      flag: "🇱🇹", act: "Lion Ceccah",                      song: "Sólo Quiero Más" },
+  { runOrder: 20, country: "Sweden",         flag: "🇸🇪", act: "FELICIA",                          song: "My System" },
+  { runOrder: 21, country: "Cyprus",         flag: "🇨🇾", act: "Antigoni",                         song: "JALLA" },
+  { runOrder: 22, country: "Italy",          flag: "🇮🇹", act: "Sal Da Vinci",                     song: "Per Sempre Sì" },
+  { runOrder: 23, country: "Norway",         flag: "🇳🇴", act: "JONAS LOVV",                       song: "YA YA YA" },
+  { runOrder: 24, country: "Romania",        flag: "🇷🇴", act: "Alexandra Căpitănescu",             song: "Choke Me" },
+  { runOrder: 25, country: "Austria",        flag: "🇦🇹", act: "Cosmó",                            song: "Tanzschein" },
 ];
 
-// ─── State ───────────────────────────────────────────────────────────────────
+// ─── State ────────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'eurovision2026_v2';
+const PLAYING_KEY = 'eurovision2026_playing_v2';
 
 let entries = [];
 let playingId = null;
-let sortBy = 'rank';
+let sortBy = 'runorder';
 let currentView = 'score';
 let searchQ = '';
-let nextId = 1000;
+let nextId = 100;
 
 function initEntries() {
-  return DEFAULT_COUNTRIES.map((c, i) => ({
-    id: i,
+  return GRAND_FINAL.map(c => ({
+    id: c.runOrder,
+    runOrder: c.runOrder,
     country: c.country,
     flag: c.flag,
-    act: '',
-    song: '',
+    act: c.act,
+    song: c.song,
     scores: { song: null, act: null, singing: null },
     notes: '',
   }));
 }
 
-// ─── Persistence ─────────────────────────────────────────────────────────────
+// ─── Persistence ──────────────────────────────────────────────────────────────
 
 function loadState() {
   try {
@@ -741,12 +769,12 @@ function loadState() {
     if (raw) {
       const parsed = JSON.parse(raw);
       entries = parsed.entries || initEntries();
-      nextId = parsed.nextId || 1000;
+      nextId = parsed.nextId || 100;
     } else {
       entries = initEntries();
     }
-    playingId = parseInt(localStorage.getItem(PLAYING_KEY) ?? 'NaN');
-    if (isNaN(playingId)) playingId = null;
+    const p = parseInt(localStorage.getItem(PLAYING_KEY) ?? 'NaN');
+    playingId = isNaN(p) ? null : p;
   } catch {
     entries = initEntries();
   }
@@ -757,14 +785,12 @@ function save() {
 }
 
 function savePlaying() {
-  if (playingId === null) {
-    localStorage.removeItem(PLAYING_KEY);
-  } else {
-    localStorage.setItem(PLAYING_KEY, String(playingId));
-  }
+  playingId === null
+    ? localStorage.removeItem(PLAYING_KEY)
+    : localStorage.setItem(PLAYING_KEY, String(playingId));
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTotal(e) {
   return (e.scores.song || 0) + (e.scores.act || 0) + (e.scores.singing || 0);
@@ -774,22 +800,26 @@ function hasScore(e) {
   return e.scores.song !== null || e.scores.act !== null || e.scores.singing !== null;
 }
 
-function totalColor(total) {
-  if (total >= 25) return 'var(--gold)';
-  if (total >= 20) return '#22c55e';
-  if (total >= 14) return 'var(--text)';
+function totalColor(t) {
+  if (t >= 25) return 'var(--gold)';
+  if (t >= 20) return 'var(--green)';
+  if (t >= 14) return 'var(--text)';
   return 'var(--muted)';
 }
 
 function avg(arr) {
   const vals = arr.filter(v => v !== null && v !== undefined);
-  if (!vals.length) return null;
-  return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+  return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function getFilteredSorted() {
   let list = [...entries];
-
   if (searchQ) {
     const q = searchQ.toLowerCase();
     list = list.filter(e =>
@@ -799,24 +829,27 @@ function getFilteredSorted() {
     );
   }
 
+  if (sortBy === 'runorder') {
+    list.sort((a, b) => a.runOrder - b.runOrder);
+    return { scored: list, unscored: [] };
+  }
+
   const scored = list.filter(hasScore);
   const unscored = list.filter(e => !hasScore(e));
 
-  scored.sort((a, b) => {
-    switch (sortBy) {
-      case 'country': return a.country.localeCompare(b.country);
-      case 'song':    return (b.scores.song || 0) - (a.scores.song || 0);
-      case 'act':     return (b.scores.act  || 0) - (a.scores.act  || 0);
-      case 'singing': return (b.scores.singing || 0) - (a.scores.singing || 0);
-      default:        return getTotal(b) - getTotal(a);
-    }
-  });
-  unscored.sort((a, b) => a.country.localeCompare(b.country));
-
+  const sorters = {
+    rank:    (a, b) => getTotal(b) - getTotal(a),
+    country: (a, b) => a.country.localeCompare(b.country),
+    song:    (a, b) => (b.scores.song    || 0) - (a.scores.song    || 0),
+    act:     (a, b) => (b.scores.act     || 0) - (a.scores.act     || 0),
+    singing: (a, b) => (b.scores.singing || 0) - (a.scores.singing || 0),
+  };
+  scored.sort(sorters[sortBy] || sorters.rank);
+  unscored.sort((a, b) => a.runOrder - b.runOrder);
   return { scored, unscored };
 }
 
-// ─── Score Picker widget ─────────────────────────────────────────────────────
+// ─── Score Picker ─────────────────────────────────────────────────────────────
 
 function createScorePicker(entry, category) {
   const container = document.createElement('div');
@@ -844,15 +877,14 @@ function createScorePicker(entry, category) {
     pip.className = 'score-pip';
     pip.dataset.val = i;
     pip.textContent = i;
-
     pip.addEventListener('mouseenter', () => refresh(i));
+    pip.addEventListener('touchstart', (e) => { e.preventDefault(); refresh(i); }, { passive: false });
     pip.addEventListener('click', () => {
       const cur = entry.scores[category];
       entry.scores[category] = (cur === i) ? null : i;
       save();
       render();
     });
-
     pips.push(pip);
     container.appendChild(pip);
   }
@@ -861,78 +893,68 @@ function createScorePicker(entry, category) {
   return container;
 }
 
-// ─── Stats bar ───────────────────────────────────────────────────────────────
+// ─── Stats ────────────────────────────────────────────────────────────────────
 
 function updateStats() {
-  const all = entries;
-  const sc = all.filter(hasScore);
-  const total = all.length;
-
-  document.getElementById('stat-scored').textContent =
-    sc.length ? `${sc.length} / ${total}` : `0 / ${total}`;
-
+  const sc = entries.filter(hasScore);
+  const total = entries.length;
   const pct = total > 0 ? (sc.length / total) * 100 : 0;
+
+  document.getElementById('stat-scored').textContent = `${sc.length} / ${total}`;
   document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-label').textContent =
-    `${sc.length} of ${total} acts scored`;
+  document.getElementById('progress-label').textContent = `${sc.length} of ${total} acts scored`;
+
+  const dim = (id, val) => {
+    const el = document.getElementById(id);
+    if (val === null) { el.textContent = '—'; el.className = 'stat-value dim'; }
+    else { el.textContent = val; el.className = 'stat-value'; }
+  };
 
   if (!sc.length) {
-    ['stat-leader','stat-top','stat-avg-song','stat-avg-act','stat-avg-sing']
-      .forEach(id => {
-        const el = document.getElementById(id);
-        el.textContent = '—';
-        el.className = 'stat-value dim';
-      });
+    dim('stat-leader', null); dim('stat-top', null);
+    dim('stat-avg-song', null); dim('stat-avg-act', null); dim('stat-avg-sing', null);
     return;
   }
 
   const leader = sc.reduce((best, e) => getTotal(e) > getTotal(best) ? e : best);
-  const topTotal = getTotal(leader);
-
-  const s = (id, val) => {
-    const el = document.getElementById(id);
-    el.textContent = val;
-    el.className = 'stat-value';
-  };
-
-  s('stat-leader', `${leader.flag} ${leader.country}`);
-  s('stat-top', `${topTotal} / 30`);
-  s('stat-avg-song', avg(sc.map(e => e.scores.song)) ?? '—');
-  s('stat-avg-act',  avg(sc.map(e => e.scores.act))  ?? '—');
-  s('stat-avg-sing', avg(sc.map(e => e.scores.singing)) ?? '—');
+  dim('stat-leader', `${leader.flag} ${leader.country}`);
+  dim('stat-top', `${getTotal(leader)} / 30`);
+  dim('stat-avg-song', avg(sc.map(e => e.scores.song)));
+  dim('stat-avg-act',  avg(sc.map(e => e.scores.act)));
+  dim('stat-avg-sing', avg(sc.map(e => e.scores.singing)));
 }
 
-// ─── Table render ────────────────────────────────────────────────────────────
+// ─── Table (desktop) ─────────────────────────────────────────────────────────
 
 function renderTable() {
   const tbody = document.getElementById('table-body');
   tbody.innerHTML = '';
 
   const { scored, unscored } = getFilteredSorted();
+  const isRankSort = sortBy === 'rank';
 
   function addRow(entry, rank) {
     const tr = document.createElement('tr');
     if (entry.id === playingId) tr.classList.add('is-playing');
 
-    // Rank
+    // Run order / rank
     const rankTd = document.createElement('td');
     rankTd.className = 'rank-cell';
-    if (rank === null) {
-      rankTd.innerHTML = '<span style="color:var(--muted)">—</span>';
-    } else if (rank <= 3) {
-      rankTd.textContent = ['🥇','🥈','🥉'][rank - 1];
+    if (rank !== null && isRankSort) {
+      rankTd.textContent = rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank;
+      if (rank > 3) rankTd.style.color = 'var(--muted)';
     } else {
-      rankTd.textContent = rank;
+      rankTd.textContent = entry.runOrder;
       rankTd.style.color = 'var(--muted)';
-      rankTd.style.fontSize = '0.85rem';
+      rankTd.style.fontSize = '0.8rem';
     }
     tr.appendChild(rankTd);
 
-    // Now-playing button
+    // Now playing
     const nowTd = document.createElement('td');
     const nowBtn = document.createElement('button');
     nowBtn.className = 'now-playing-btn' + (entry.id === playingId ? ' active' : '');
-    nowBtn.title = entry.id === playingId ? 'Currently playing' : 'Mark as playing';
+    nowBtn.title = entry.id === playingId ? 'Now playing' : 'Mark as playing';
     nowBtn.textContent = '▶';
     nowBtn.addEventListener('click', () => {
       playingId = (playingId === entry.id) ? null : entry.id;
@@ -947,14 +969,14 @@ function renderTable() {
     ctryTd.innerHTML = `<div class="country-cell"><span class="flag">${entry.flag}</span><span class="country-name">${escHtml(entry.country)}</span></div>`;
     tr.appendChild(ctryTd);
 
-    // Act (editable)
+    // Act
     const actTd = document.createElement('td');
-    actTd.appendChild(makeEditable(entry, 'act', 'Artist name…'));
+    actTd.appendChild(makeEditable(entry, 'act', 'Artist…'));
     tr.appendChild(actTd);
 
-    // Song (editable)
+    // Song
     const songTd = document.createElement('td');
-    songTd.appendChild(makeEditable(entry, 'song', 'Song title…'));
+    songTd.appendChild(makeEditable(entry, 'song', 'Song…'));
     tr.appendChild(songTd);
 
     // Scores
@@ -980,42 +1002,36 @@ function renderTable() {
     // Notes
     const notesTd = document.createElement('td');
     const notesInput = makeEditable(entry, 'notes', 'Notes…');
-    notesInput.style.minWidth = '80px';
-    notesInput.style.fontSize = '0.75rem';
+    notesInput.style.fontSize = '0.72rem';
     notesTd.appendChild(notesInput);
     tr.appendChild(notesTd);
 
     // Actions
-    const actionTd = document.createElement('td');
-    actionTd.style.whiteSpace = 'nowrap';
-
+    const actTd2 = document.createElement('td');
+    actTd2.style.whiteSpace = 'nowrap';
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-row-btn';
     clearBtn.title = 'Clear scores';
     clearBtn.textContent = '↺';
     clearBtn.addEventListener('click', () => {
       entry.scores = { song: null, act: null, singing: null };
-      save();
-      render();
-      toast('Scores cleared for ' + entry.country);
+      save(); render();
+      toast('Cleared ' + entry.country);
     });
-
     const delBtn = document.createElement('button');
     delBtn.className = 'delete-row-btn';
-    delBtn.title = 'Remove entry';
+    delBtn.title = 'Remove';
     delBtn.textContent = '✕';
     delBtn.addEventListener('click', () => {
-      if (confirm(`Remove ${entry.country} from the scoreboard?`)) {
+      if (confirm(`Remove ${entry.country}?`)) {
         entries = entries.filter(e => e.id !== entry.id);
         if (playingId === entry.id) { playingId = null; savePlaying(); }
-        save();
-        render();
+        save(); render();
       }
     });
-
-    actionTd.appendChild(clearBtn);
-    actionTd.appendChild(delBtn);
-    tr.appendChild(actionTd);
+    actTd2.appendChild(clearBtn);
+    actTd2.appendChild(delBtn);
+    tr.appendChild(actTd2);
 
     tbody.appendChild(tr);
   }
@@ -1023,21 +1039,20 @@ function renderTable() {
   scored.forEach((e, i) => addRow(e, i + 1));
 
   if (unscored.length > 0) {
-    const sep = document.createElement('tr');
-    sep.className = 'section-sep';
-    const label = scored.length
-      ? `Not yet scored — ${unscored.length} remaining`
-      : `${unscored.length} acts — enter scores above to begin ranking`;
-    sep.innerHTML = `<td colspan="11">${label}</td>`;
-    tbody.appendChild(sep);
+    if (scored.length > 0) {
+      const sep = document.createElement('tr');
+      sep.className = 'section-sep';
+      sep.innerHTML = `<td colspan="11">Not yet scored — ${unscored.length} remaining</td>`;
+      tbody.appendChild(sep);
+    }
     unscored.forEach(e => addRow(e, null));
   }
 
-  // Update sort indicators
+  // Sort headers
   document.querySelectorAll('.scoring-table th.sortable').forEach(th => {
     th.classList.remove('sort-asc', 'sort-desc', 'active-sort');
     if (th.dataset.sort === sortBy) {
-      th.classList.add('sort-desc', 'active-sort');
+      th.classList.add(sortBy === 'country' ? 'sort-asc' : 'sort-desc', 'active-sort');
     }
   });
 }
@@ -1048,20 +1063,183 @@ function makeEditable(entry, field, placeholder) {
   input.className = 'editable';
   input.value = entry[field];
   input.placeholder = placeholder;
-  let debounceTimer;
-  input.addEventListener('input', (e) => {
+  let t;
+  input.addEventListener('input', e => {
     entry[field] = e.target.value;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => { save(); updateStats(); }, 400);
+    clearTimeout(t);
+    t = setTimeout(() => { save(); updateStats(); }, 400);
   });
   return input;
 }
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ─── Mobile cards ─────────────────────────────────────────────────────────────
+
+function renderCards() {
+  const container = document.getElementById('card-view');
+  container.innerHTML = '';
+
+  const { scored, unscored } = getFilteredSorted();
+  const allEntries = sortBy === 'runorder' ? scored : [...scored, ...unscored];
+
+  const rankedIds = new Set(scored.map(e => e.id));
+  const rankMap = {};
+  scored.forEach((e, i) => rankMap[e.id] = i + 1);
+
+  allEntries.forEach(entry => {
+    const rank = rankedIds.has(entry.id) && sortBy !== 'runorder' ? rankMap[entry.id] : null;
+    const card = document.createElement('div');
+    card.className = 'entry-card' + (entry.id === playingId ? ' is-playing' : '');
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'card-header';
+
+    const runOrderEl = document.createElement('span');
+    runOrderEl.className = 'card-run-order';
+    if (rank !== null && rank <= 3) {
+      runOrderEl.textContent = ['🥇','🥈','🥉'][rank-1];
+      runOrderEl.classList.add('medal');
+    } else {
+      runOrderEl.textContent = entry.runOrder;
+    }
+
+    const flagEl = document.createElement('span');
+    flagEl.className = 'card-flag';
+    flagEl.textContent = entry.flag;
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'card-country-name';
+    nameEl.textContent = entry.country;
+
+    const actions = document.createElement('div');
+    actions.className = 'card-header-actions';
+
+    const nowBtn = document.createElement('button');
+    nowBtn.className = 'now-playing-btn' + (entry.id === playingId ? ' active' : '');
+    nowBtn.title = 'Mark as playing';
+    nowBtn.textContent = '▶';
+    nowBtn.addEventListener('click', () => {
+      playingId = (playingId === entry.id) ? null : entry.id;
+      savePlaying(); render();
+    });
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'clear-row-btn';
+    clearBtn.style.opacity = '1';
+    clearBtn.title = 'Clear scores';
+    clearBtn.textContent = '↺';
+    clearBtn.addEventListener('click', () => {
+      entry.scores = { song: null, act: null, singing: null };
+      save(); render();
+      toast('Cleared ' + entry.country);
+    });
+
+    actions.appendChild(nowBtn);
+    actions.appendChild(clearBtn);
+    header.appendChild(runOrderEl);
+    header.appendChild(flagEl);
+    header.appendChild(nameEl);
+    header.appendChild(actions);
+    card.appendChild(header);
+
+    // Fields
+    const fields = document.createElement('div');
+    fields.className = 'card-fields';
+
+    const actInput = document.createElement('input');
+    actInput.type = 'text';
+    actInput.className = 'editable';
+    actInput.value = entry.act;
+    actInput.placeholder = 'Artist name…';
+    let t1;
+    actInput.addEventListener('input', e => {
+      entry.act = e.target.value;
+      clearTimeout(t1); t1 = setTimeout(() => { save(); updateStats(); }, 400);
+    });
+
+    const songInput = document.createElement('input');
+    songInput.type = 'text';
+    songInput.className = 'editable song-field';
+    songInput.value = entry.song;
+    songInput.placeholder = 'Song title…';
+    let t2;
+    songInput.addEventListener('input', e => {
+      entry.song = e.target.value;
+      clearTimeout(t2); t2 = setTimeout(() => { save(); updateStats(); }, 400);
+    });
+
+    fields.appendChild(actInput);
+    fields.appendChild(songInput);
+    card.appendChild(fields);
+
+    // Scores
+    const scoresDiv = document.createElement('div');
+    scoresDiv.className = 'card-scores';
+
+    [
+      { cat: 'song',    emoji: '♪', label: 'Song',    cls: 'song-lbl' },
+      { cat: 'act',     emoji: '🎭', label: 'Act',     cls: 'act-lbl'  },
+      { cat: 'singing', emoji: '🎤', label: 'Singing', cls: 'sing-lbl' },
+    ].forEach(({ cat, label, cls }) => {
+      const row = document.createElement('div');
+      row.className = 'score-row';
+
+      const lbl = document.createElement('span');
+      lbl.className = `cat-text ${cls}`;
+      lbl.textContent = label;
+
+      row.appendChild(lbl);
+      row.appendChild(createScorePicker(entry, cat));
+      scoresDiv.appendChild(row);
+    });
+
+    card.appendChild(scoresDiv);
+
+    // Footer
+    const footer = document.createElement('div');
+    footer.className = 'card-footer';
+
+    const totalEl = document.createElement('span');
+    totalEl.className = 'card-total';
+    if (hasScore(entry)) {
+      const t = getTotal(entry);
+      totalEl.textContent = `${t} / 30`;
+      totalEl.style.color = totalColor(t);
+    } else {
+      totalEl.textContent = '— / 30';
+      totalEl.style.color = 'var(--muted)';
+    }
+
+    const notesInput = document.createElement('input');
+    notesInput.type = 'text';
+    notesInput.className = 'editable card-notes';
+    notesInput.value = entry.notes;
+    notesInput.placeholder = 'Notes…';
+    let t3;
+    notesInput.addEventListener('input', e => {
+      entry.notes = e.target.value;
+      clearTimeout(t3); t3 = setTimeout(() => save(), 400);
+    });
+
+    footer.appendChild(totalEl);
+    footer.appendChild(notesInput);
+    card.appendChild(footer);
+
+    container.appendChild(card);
+  });
+
+  // Separator for unscored when ranked
+  if (sortBy !== 'runorder' && unscored.length && scored.length) {
+    const sep = document.createElement('div');
+    sep.style.cssText = 'font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin:0.25rem 0;';
+    sep.textContent = `Not yet scored — ${unscored.length} remaining`;
+    // Insert before unscored cards (already appended above); need different approach
+    // Actually the separator needs to appear between scored and unscored in the card view
+    // Since both groups are appended above already, let's rebuild:
+  }
 }
 
-// ─── Ranking render ──────────────────────────────────────────────────────────
+// ─── Ranking ──────────────────────────────────────────────────────────────────
 
 function renderRanking() {
   const list = document.getElementById('ranking-list');
@@ -1070,7 +1248,7 @@ function renderRanking() {
   const { scored, unscored } = getFilteredSorted();
 
   if (!scored.length) {
-    list.innerHTML = '<div class="ranking-empty">No scores yet.<br>Switch to <strong>Scoring</strong> view to rate acts.</div>';
+    list.innerHTML = '<div class="ranking-empty">No scores yet.<br>Switch to <strong>Scoring</strong> to rate acts.</div>';
     return;
   }
 
@@ -1080,9 +1258,8 @@ function renderRanking() {
     item.className = 'ranking-item' + (rank <= 3 ? ` p${rank}` : '');
 
     const badgeClass = rank === 1 ? 'rb-gold' : rank === 2 ? 'rb-silver' : rank === 3 ? 'rb-bronze' : 'rb-other';
-    const badgeText  = rank <= 3 ? ['🥇','🥈','🥉'][rank - 1] : rank;
-
-    const sub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' — ') || 'No artist / song entered';
+    const badgeText  = rank <= 3 ? ['🥇','🥈','🥉'][rank-1] : rank;
+    const sub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' — ') || 'No info entered';
     const t = getTotal(entry);
 
     item.innerHTML = `
@@ -1100,7 +1277,6 @@ function renderRanking() {
       </div>
       <div class="ranking-total" style="color:${totalColor(t)}">${t}</div>
     `;
-
     list.appendChild(item);
   });
 
@@ -1113,13 +1289,13 @@ function renderRanking() {
     unscored.forEach(entry => {
       const item = document.createElement('div');
       item.className = 'ranking-item';
-      item.style.opacity = '0.45';
+      item.style.opacity = '0.4';
       item.innerHTML = `
-        <div class="rank-badge rb-other">—</div>
+        <div class="rank-badge rb-other">${entry.runOrder}</div>
         <div class="ranking-flag">${entry.flag}</div>
         <div class="ranking-info">
           <div class="ranking-country">${escHtml(entry.country)}</div>
-          <div class="ranking-sub">${escHtml(entry.act || 'No artist entered')}</div>
+          <div class="ranking-sub">${escHtml(entry.act || '—')}</div>
         </div>
       `;
       list.appendChild(item);
@@ -1127,50 +1303,55 @@ function renderRanking() {
   }
 }
 
-// ─── Render ──────────────────────────────────────────────────────────────────
+// ─── Main render ──────────────────────────────────────────────────────────────
 
 function render() {
   updateStats();
   if (currentView === 'score') {
     renderTable();
+    renderCards();
   } else {
     renderRanking();
   }
 }
 
-// ─── Export ──────────────────────────────────────────────────────────────────
+// ─── Export ───────────────────────────────────────────────────────────────────
 
-function buildExportText() {
-  const { scored, unscored } = getFilteredSorted();
-  const lines = [];
-  lines.push('EUROVISION 2026 — PERSONAL SCORES');
-  lines.push('Generated: ' + new Date().toLocaleString());
-  lines.push('='.repeat(50));
-  lines.push('');
+function buildExport() {
+  const { scored, unscored } = (() => {
+    const s = [...entries].filter(hasScore);
+    const u = [...entries].filter(e => !hasScore(e));
+    s.sort((a, b) => getTotal(b) - getTotal(a));
+    u.sort((a, b) => a.runOrder - b.runOrder);
+    return { scored: s, unscored: u };
+  })();
+
+  const lines = [
+    'EUROVISION 2026 GRAND FINAL — MY SCORES',
+    'Vienna, Austria · ' + new Date().toLocaleDateString(),
+    '='.repeat(46), '',
+  ];
 
   if (scored.length) {
-    lines.push('RANKINGS');
-    lines.push('');
+    lines.push('MY RANKING', '');
     scored.forEach((e, i) => {
       lines.push(`${i + 1}. ${e.flag} ${e.country}`);
-      if (e.act || e.song) {
-        lines.push(`   ${[e.act, e.song ? `"${e.song}"` : ''].filter(Boolean).join(' — ')}`);
-      }
-      lines.push(`   Song: ${e.scores.song ?? '—'}  Act: ${e.scores.act ?? '—'}  Singing: ${e.scores.singing ?? '—'}  |  Total: ${getTotal(e)}/30`);
+      if (e.act || e.song) lines.push(`   ${[e.act, e.song ? `"${e.song}"` : ''].filter(Boolean).join(' — ')}`);
+      lines.push(`   ♪ ${e.scores.song ?? '—'}  🎭 ${e.scores.act ?? '—'}  🎤 ${e.scores.singing ?? '—'}  |  Total: ${getTotal(e)}/30`);
       if (e.notes) lines.push(`   Notes: ${e.notes}`);
       lines.push('');
     });
   }
 
   if (unscored.length) {
-    lines.push('NOT YET SCORED');
-    unscored.forEach(e => lines.push(`  • ${e.flag} ${e.country}`));
+    lines.push(`NOT SCORED (${unscored.length}):`);
+    unscored.forEach(e => lines.push(`  ${e.runOrder}. ${e.flag} ${e.country}`));
   }
 
   return lines.join('\n');
 }
 
-// ─── Toast ───────────────────────────────────────────────────────────────────
+// ─── Toast ────────────────────────────────────────────────────────────────────
 
 let toastTimer;
 function toast(msg) {
@@ -1178,24 +1359,19 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ─── Event listeners ─────────────────────────────────────────────────────────
+// ─── Events ───────────────────────────────────────────────────────────────────
 
-// Search
 document.getElementById('search').addEventListener('input', e => {
-  searchQ = e.target.value;
-  render();
+  searchQ = e.target.value; render();
 });
 
-// Sort
 document.getElementById('sort-sel').addEventListener('change', e => {
-  sortBy = e.target.value;
-  render();
+  sortBy = e.target.value; render();
 });
 
-// Table sort headers
 document.querySelector('.scoring-table thead').addEventListener('click', e => {
   const th = e.target.closest('th.sortable');
   if (!th) return;
@@ -1204,7 +1380,6 @@ document.querySelector('.scoring-table thead').addEventListener('click', e => {
   render();
 });
 
-// View toggle
 document.getElementById('btn-view-score').addEventListener('click', () => {
   currentView = 'score';
   document.getElementById('view-score').style.display = '';
@@ -1213,6 +1388,7 @@ document.getElementById('btn-view-score').addEventListener('click', () => {
   document.getElementById('btn-view-rank').classList.remove('active');
   render();
 });
+
 document.getElementById('btn-view-rank').addEventListener('click', () => {
   currentView = 'rank';
   document.getElementById('view-score').style.display = 'none';
@@ -1222,80 +1398,68 @@ document.getElementById('btn-view-rank').addEventListener('click', () => {
   render();
 });
 
-// Export
 document.getElementById('btn-export').addEventListener('click', () => {
-  document.getElementById('export-text').value = buildExportText();
+  document.getElementById('export-text').value = buildExport();
   document.getElementById('modal-export').classList.add('open');
 });
+
 document.getElementById('btn-copy').addEventListener('click', () => {
   navigator.clipboard.writeText(document.getElementById('export-text').value)
-    .then(() => toast('Copied to clipboard!'))
-    .catch(() => toast('Select and copy the text manually.'));
+    .then(() => toast('Copied!'))
+    .catch(() => toast('Select and copy manually.'));
 });
 
-// Reset
 document.getElementById('btn-reset').addEventListener('click', () =>
   document.getElementById('modal-reset').classList.add('open')
 );
+
 document.getElementById('btn-confirm-reset').addEventListener('click', () => {
-  entries.forEach(e => {
-    e.scores = { song: null, act: null, singing: null };
-    e.notes = '';
-  });
-  save();
-  render();
+  entries.forEach(e => { e.scores = { song: null, act: null, singing: null }; e.notes = ''; });
+  save(); render();
   document.getElementById('modal-reset').classList.remove('open');
   toast('All scores cleared');
 });
 
-// Add entry
 document.getElementById('btn-add').addEventListener('click', () => {
-  ['add-flag','add-country','add-act','add-song'].forEach(id =>
-    document.getElementById(id).value = ''
-  );
+  ['add-flag','add-country','add-act','add-song'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
   document.getElementById('modal-add').classList.add('open');
   setTimeout(() => document.getElementById('add-country').focus(), 50);
 });
+
 document.getElementById('btn-confirm-add').addEventListener('click', () => {
   const country = document.getElementById('add-country').value.trim();
   if (!country) { document.getElementById('add-country').focus(); return; }
   const flag = document.getElementById('add-flag').value.trim() || '🏳️';
+  const maxRun = Math.max(...entries.map(e => e.runOrder), 25);
   entries.push({
     id: nextId++,
-    country,
-    flag,
+    runOrder: maxRun + 1,
+    country, flag,
     act: document.getElementById('add-act').value.trim(),
     song: document.getElementById('add-song').value.trim(),
     scores: { song: null, act: null, singing: null },
     notes: '',
   });
-  save();
-  render();
+  save(); render();
   document.getElementById('modal-add').classList.remove('open');
   toast(`${flag} ${country} added`);
 });
 
-// Close modals
 document.querySelectorAll('.modal-backdrop').forEach(bd => {
-  bd.addEventListener('click', e => {
-    if (e.target === bd) bd.classList.remove('open');
-  });
+  bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
 });
 document.querySelectorAll('.modal-close').forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.closest('.modal-backdrop').classList.remove('open');
-  });
+  btn.addEventListener('click', () => btn.closest('.modal-backdrop').classList.remove('open'));
 });
-
-// Keyboard: Escape closes modals
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-backdrop.open')
-      .forEach(bd => bd.classList.remove('open'));
+    document.querySelectorAll('.modal-backdrop.open').forEach(bd => bd.classList.remove('open'));
   }
 });
 
-// ─── Init ────────────────────────────────────────────────────────────────────
+// ─── Init ─────────────────────────────────────────────────────────────────────
 
 loadState();
 render();
