@@ -116,10 +116,9 @@
       const username = localStorage.getItem('esc_username');
       if (!username) return Promise.resolve();
       const payload = { type: 'reset', username, ts: Date.now() };
-      return fetch(`${NTFY_BASE}/${ntfyTopic()}`, {
+      return fetch(`${NTFY_BASE}/${ntfyTopic()}?title=${encodeURIComponent(username)}&tags=wastebasket`, {
         method: 'POST',
         body: JSON.stringify(payload),
-        headers: { 'Title': username, 'Tags': 'wastebasket' }
       }).catch(() => {});
     }
 

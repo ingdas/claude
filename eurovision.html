@@ -1464,11 +1464,12 @@ function publishNow() {
   if (!username || !sseSource) return;
   const payload = { username, ts: Date.now(), entries: {} };
   entries.forEach(e => { payload.entries[e.id] = e.scores; });
-  fetch(`${NTFY_BASE}/${ntfyTopic()}`, {
+  fetch(`${NTFY_BASE}/${ntfyTopic()}?title=${encodeURIComponent(username)}&tags=musical_note`, {
     method: 'POST',
     body: JSON.stringify(payload),
-    headers: { 'Title': username, 'Tags': 'musical_note' }
-  }).catch(() => {});
+  }).then(r => {
+    if (!r.ok) toast(`Sync publish failed (${r.status})`);
+  }).catch(err => toast(`Sync error: ${err.message}`));
 }
 
 function scheduledPublish() {
