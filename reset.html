@@ -91,6 +91,7 @@
     <p>Choose what to clear from this browser's local storage.</p>
     <div class="btn-group">
       <button class="btn-scores" onclick="resetScores()">Clear all scores</button>
+      <button class="btn-scores" onclick="resetScoresAndNotify()">Clear scores &amp; notify others</button>
       <button class="btn-identity" onclick="resetIdentity()">Clear username &amp; room</button>
       <button class="btn-all" onclick="resetAll()">Clear everything</button>
       <button class="btn-back" onclick="location.href='eurovision.html'">← Back to scoring</button>
@@ -99,15 +100,38 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'eurovision2026_v2';
+    const STORAGE_KEY  = 'eurovision2026_v2';
+    const NTFY_BASE    = 'https://ntfy.ingel.ing';
+
+    function ntfyTopic() {
+      const room = localStorage.getItem('esc_room') || '';
+      return 'esc2026' + (room ? '-' + room.replace(/[^a-z0-9-]/gi, '-') : '');
+    }
 
     function showStatus(msg) {
       document.getElementById('status').textContent = msg;
     }
 
+    function publishReset() {
+      const username = localStorage.getItem('esc_username');
+      if (!username) return Promise.resolve();
+      const payload = { type: 'reset', username, ts: Date.now() };
+      return fetch(`${NTFY_BASE}/${ntfyTopic()}`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Title': username, 'Tags': 'wastebasket' }
+      }).catch(() => {});
+    }
+
     function resetScores() {
       localStorage.removeItem(STORAGE_KEY);
       showStatus('Scores cleared.');
+    }
+
+    function resetScoresAndNotify() {
+      localStorage.removeItem(STORAGE_KEY);
+      showStatus('Notifying others…');
+      publishReset().then(() => showStatus('Scores cleared — others will no longer see you.'));
     }
 
     function resetIdentity() {

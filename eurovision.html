@@ -1396,6 +1396,10 @@ function ntfyTopic() {
 
 function handleIncomingPayload(payload) {
   if (!payload.username || payload.username === username) return;
+  if (payload.type === 'reset') {
+    delete peers[payload.username];
+    return;
+  }
   const existing = peers[payload.username];
   // Only update if this message is newer than what we already have
   if (!existing || (payload.ts && payload.ts > (existing.ts || 0))) {
