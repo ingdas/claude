@@ -474,6 +474,33 @@
       margin-top: 0.9rem;
     }
 
+    /* ── Sync strip ── */
+    #sync-strip {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.35rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      overflow: hidden;
+    }
+    #sync-dot { font-size: 0.55rem; transition: color 0.3s; }
+    #sync-dot.ok  { color: var(--green); }
+    #sync-dot.err { color: var(--red); }
+    #sync-dot.dim { color: var(--muted); }
+    #sync-label { flex-shrink: 0; }
+    #sync-peers { color: var(--accent2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Compare view ── */
+    .compare-empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .compare-table td { text-align: center; font-size: 0.85rem; }
+    .compare-table td:first-child { text-align: left; }
+    .compare-table th:first-child { text-align: left; }
+    .compare-table th { white-space: nowrap; }
+    .compare-you { color: var(--accent2) !important; }
+
     /* ── Toast ── */
     .toast {
       position: fixed;
@@ -537,6 +564,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <button class="btn btn-ghost" id="btn-settings" title="Sync settings">⚙ Sync</button>
     <button class="btn btn-ghost" id="btn-export">Export</button>
     <button class="btn btn-danger" id="btn-reset">Reset</button>
   </div>
@@ -576,6 +604,12 @@
   </div>
 </div>
 
+<div id="sync-strip">
+  <span id="sync-dot">⬤</span>
+  <span id="sync-label">Not syncing — click ⚙ Sync to join</span>
+  <span id="sync-peers"></span>
+</div>
+
 <div class="controls">
   <input type="search" id="search" placeholder="Search…">
   <select id="sort-sel">
@@ -589,6 +623,7 @@
   <div class="view-toggle">
     <button id="btn-view-score" class="active">Scoring</button>
     <button id="btn-view-rank">Ranking</button>
+    <button id="btn-view-compare">Compare</button>
   </div>
   <div class="controls-right"></div>
 </div>
@@ -622,6 +657,34 @@
   <!-- Ranking view -->
   <div id="view-rank" style="display:none">
     <div class="ranking-list" id="ranking-list"></div>
+  </div>
+
+  <!-- Compare view -->
+  <div id="view-compare" style="display:none">
+    <div id="compare-content"></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="modal-settings">
+  <div class="modal">
+    <h2>⚙ Sync Settings</h2>
+    <p>Share scores in real time with friends watching together.</p>
+    <div class="form-group">
+      <div class="form-field">
+        <label class="form-label">Your name *</label>
+        <input class="form-input" id="settings-username" placeholder="e.g. Alice" maxlength="32">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Room name (leave blank for public room)</label>
+        <input class="form-input" id="settings-room" placeholder="e.g. living-room-2026" maxlength="64">
+        <span style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem">Share the same room name with friends to compare privately.</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btn-save-settings">Connect</button>
+      <button class="btn btn-ghost modal-close">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -728,6 +791,7 @@ function loadState() {
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ entries, nextId }));
+  scheduledPublish();
 }
 
 
@@ -1300,6 +1364,181 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
+// ─── Sync (ntfy) ─────────────────────────────────────────────────────────────
+
+let username = localStorage.getItem('esc_username') || '';
+let room     = localStorage.getItem('esc_room')     || '';
+let peers    = {};          // { name: { ts, entries: {id: scores} } }
+let sseSource = null;
+let publishTimerId;
+
+const NTFY_BASE = 'https://ntfy.ingel.ing';
+const PEER_TTL  = 45 * 60 * 1000; // 45 min
+
+function ntfyTopic() {
+  return 'esc2026' + (room ? '-' + room.replace(/[^a-z0-9-]/gi, '-') : '');
+}
+
+function connectSSE() {
+  if (sseSource) { sseSource.close(); sseSource = null; }
+  if (!username) return;
+
+  setSyncStatus('connecting');
+  sseSource = new EventSource(`${NTFY_BASE}/${ntfyTopic()}/sse`);
+
+  sseSource.addEventListener('open', () => setSyncStatus('ok'));
+  sseSource.addEventListener('error', () => setSyncStatus('err'));
+
+  sseSource.addEventListener('message', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.event !== 'message') return;
+      const payload = JSON.parse(data.message);
+      if (!payload.username || payload.username === username) return;
+      peers[payload.username] = { ts: Date.now(), entries: payload.entries || {} };
+      expirePeers();
+      updatePeerChip();
+      if (currentView === 'compare') renderCompare();
+    } catch {}
+  });
+}
+
+function publishNow() {
+  if (!username || !sseSource) return;
+  const payload = { username, ts: Date.now(), entries: {} };
+  entries.forEach(e => { payload.entries[e.id] = e.scores; });
+  fetch(`${NTFY_BASE}/${ntfyTopic()}`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Title': username, 'Tags': 'musical_note' }
+  }).catch(() => {});
+}
+
+function scheduledPublish() {
+  clearTimeout(publishTimerId);
+  publishTimerId = setTimeout(publishNow, 1800);
+}
+
+function expirePeers() {
+  const now = Date.now();
+  Object.keys(peers).forEach(k => { if (now - peers[k].ts > PEER_TTL) delete peers[k]; });
+}
+
+function setSyncStatus(state) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  dot.className = 'dim';
+  if (state === 'ok') {
+    dot.className = 'ok';
+    label.textContent = `Connected as ${username} · Room: ${ntfyTopic()}`;
+  } else if (state === 'err') {
+    dot.className = 'err';
+    label.textContent = 'Disconnected — retrying…';
+  } else if (state === 'connecting') {
+    label.textContent = `Connecting as ${username}…`;
+  } else {
+    label.textContent = 'Not syncing — click ⚙ Sync to join';
+  }
+}
+
+function updatePeerChip() {
+  expirePeers();
+  const names = Object.keys(peers);
+  const el = document.getElementById('sync-peers');
+  el.textContent = names.length ? '· Also here: ' + names.join(', ') : '';
+}
+
+// ─── Compare render ───────────────────────────────────────────────────────────
+
+function renderCompare() {
+  const container = document.getElementById('compare-content');
+  container.innerHTML = '';
+
+  if (!username) {
+    container.innerHTML = '<p class="compare-empty">Click <strong>⚙ Sync</strong> in the header to set your name and join a room.</p>';
+    return;
+  }
+
+  expirePeers();
+  const peerNames = Object.keys(peers);
+
+  if (!peerNames.length) {
+    container.innerHTML = `<p class="compare-empty">Waiting for others…<br><br>
+      Share this room name with friends: <strong>${ntfyTopic()}</strong><br>
+      They'll appear here once they've set the same room.</p>`;
+    return;
+  }
+
+  const allUsers = [username, ...peerNames];
+
+  // Sort entries: by my total desc, unscored last
+  const sorted = [...entries].sort((a, b) => {
+    const ta = peerTotal(username, a.id), tb = peerTotal(username, b.id);
+    if (ta === null && tb === null) return a.runOrder - b.runOrder;
+    if (ta === null) return 1;
+    if (tb === null) return -1;
+    return tb - ta;
+  });
+
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+  const table = document.createElement('table');
+  table.className = 'scoring-table compare-table';
+
+  // Header row
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  htr.innerHTML = '<th>Country</th>' + allUsers.map((u, i) =>
+    `<th${i === 0 ? ' class="compare-you"' : ''}>${escHtml(u)}${i === 0 ? ' ★' : ''}</th>`
+  ).join('');
+  thead.appendChild(htr);
+  table.appendChild(thead);
+
+  // Body rows
+  const tbody = document.createElement('tbody');
+  sorted.forEach(entry => {
+    const tr = document.createElement('tr');
+    const sub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' · ');
+    tr.innerHTML = `<td><div class="country-cell"><span class="flag">${entry.flag}</span>
+      <div><span class="country-name">${escHtml(entry.country)}</span>
+      ${sub ? `<span class="country-sub" style="display:block"> ${escHtml(sub)}</span>` : ''}</div></div></td>`;
+
+    allUsers.forEach((user, i) => {
+      const td = document.createElement('td');
+      const t = peerTotal(user, entry.id);
+      if (t === null) {
+        td.innerHTML = '<span style="color:var(--muted)">—</span>';
+      } else {
+        td.textContent = t;
+        td.style.fontWeight = '700';
+        td.style.color = i === 0 ? 'var(--accent2)' : totalColor(t);
+      }
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+}
+
+function peerTotal(user, entryId) {
+  let s;
+  if (user === username) {
+    const e = entries.find(e => e.id === entryId);
+    if (!e) return null;
+    s = e.scores;
+  } else {
+    const peer = peers[user];
+    if (!peer) return null;
+    s = peer.entries[entryId];
+    if (!s) return null;
+  }
+  if (s.song === null && s.act === null && s.singing === null && s.xfactor === null) return null;
+  return (s.song || 0) + (s.act || 0) + (s.singing || 0) + (s.xfactor || 0);
+}
+
 // ─── Events ───────────────────────────────────────────────────────────────────
 
 document.getElementById('search').addEventListener('input', e => {
@@ -1320,20 +1559,53 @@ document.querySelector('.scoring-table thead').addEventListener('click', e => {
 
 document.getElementById('btn-view-score').addEventListener('click', () => {
   currentView = 'score';
-  document.getElementById('view-score').style.display = '';
-  document.getElementById('view-rank').style.display = 'none';
+  document.getElementById('view-score').style.display   = '';
+  document.getElementById('view-rank').style.display    = 'none';
+  document.getElementById('view-compare').style.display = 'none';
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-view-score').classList.add('active');
-  document.getElementById('btn-view-rank').classList.remove('active');
   render();
 });
 
 document.getElementById('btn-view-rank').addEventListener('click', () => {
   currentView = 'rank';
-  document.getElementById('view-score').style.display = 'none';
-  document.getElementById('view-rank').style.display = '';
-  document.getElementById('btn-view-score').classList.remove('active');
+  document.getElementById('view-score').style.display   = 'none';
+  document.getElementById('view-rank').style.display    = '';
+  document.getElementById('view-compare').style.display = 'none';
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-view-rank').classList.add('active');
   render();
+});
+
+// Settings / sync
+document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('settings-username').value = username;
+  document.getElementById('settings-room').value = room;
+  document.getElementById('modal-settings').classList.add('open');
+  setTimeout(() => document.getElementById('settings-username').focus(), 50);
+});
+
+document.getElementById('btn-save-settings').addEventListener('click', () => {
+  const u = document.getElementById('settings-username').value.trim();
+  if (!u) { document.getElementById('settings-username').focus(); return; }
+  username = u;
+  room = document.getElementById('settings-room').value.trim();
+  localStorage.setItem('esc_username', username);
+  localStorage.setItem('esc_room', room);
+  document.getElementById('modal-settings').classList.remove('open');
+  connectSSE();
+  publishNow();
+});
+
+// Compare view
+document.getElementById('btn-view-compare').addEventListener('click', () => {
+  currentView = 'compare';
+  document.getElementById('view-score').style.display   = 'none';
+  document.getElementById('view-rank').style.display    = 'none';
+  document.getElementById('view-compare').style.display = '';
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-view-compare').classList.add('active');
+  renderCompare();
 });
 
 document.getElementById('btn-export').addEventListener('click', () => {
@@ -1375,6 +1647,8 @@ document.addEventListener('keydown', e => {
 
 loadState();
 render();
+if (username) connectSSE();
+else setSyncStatus('off');
 </script>
 </body>
 </html>
