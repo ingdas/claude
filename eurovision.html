@@ -611,7 +611,8 @@
   <span id="sync-dot">⬤</span>
   <span id="sync-label">Not syncing — click ⚙ Sync to join</span>
   <span id="sync-peers"></span>
-  <button id="btn-force-sync" title="Force push scores to ntfy" style="margin-left:auto;padding:0.15rem 0.5rem;font-size:0.7rem;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;cursor:pointer;display:none">↑ Push</button>
+  <button id="btn-force-fetch" title="Re-fetch scores from ntfy" style="margin-left:auto;padding:0.15rem 0.5rem;font-size:0.7rem;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;cursor:pointer;display:none">↓ Fetch</button>
+  <button id="btn-force-sync" title="Force push scores to ntfy" style="padding:0.15rem 0.5rem;font-size:0.7rem;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:4px;cursor:pointer;display:none">↑ Push</button>
 </div>
 
 <div class="controls">
@@ -1408,24 +1409,15 @@ function handleIncomingPayload(payload) {
   }
 }
 
-function connectSSE() {
-  if (sseSource) { sseSource.close(); sseSource = null; }
-  if (!username) return;
-
-  setSyncStatus('connecting');
-
-  // Fetch recent messages to catch peers who already submitted
+function pollHistory() {
   const since = Math.floor((Date.now() - PEER_TTL) / 1000);
-  fetch(`${NTFY_BASE}/${ntfyTopic()}/json?since=${since}&poll=1`)
+  return fetch(`${NTFY_BASE}/${ntfyTopic()}/json?since=${since}&poll=1`)
     .then(r => r.text())
     .then(text => {
       text.trim().split('\n').forEach(line => {
         try {
           const msg = JSON.parse(line);
-          if (msg.message) {
-            const payload = JSON.parse(msg.message);
-            handleIncomingPayload(payload);
-          }
+          if (msg.message) handleIncomingPayload(JSON.parse(msg.message));
         } catch {}
       });
       expirePeers();
@@ -1433,10 +1425,26 @@ function connectSSE() {
       if (currentView === 'compare') renderCompare();
     })
     .catch(() => {});
+}
 
+function connectSSE() {
+  if (sseSource) { sseSource.close(); sseSource = null; }
+  if (!username) return;
+
+  setSyncStatus('connecting');
+
+  // Fetch recent messages to catch peers who already submitted
+  pollHistory();
+
+  let connected = false;
   sseSource = new EventSource(`${NTFY_BASE}/${ntfyTopic()}/sse`);
 
-  sseSource.addEventListener('open', () => setSyncStatus('ok'));
+  sseSource.addEventListener('open', () => {
+    setSyncStatus('ok');
+    // On reconnect (not the initial open), re-poll to catch messages missed during the gap
+    if (connected) pollHistory();
+    connected = true;
+  });
   sseSource.addEventListener('error', () => setSyncStatus('err'));
 
   sseSource.addEventListener('message', (e) => {
@@ -1474,24 +1482,24 @@ function expirePeers() {
 }
 
 function setSyncStatus(state) {
-  const dot   = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-label');
-  const pushBtn = document.getElementById('btn-force-sync');
+  const dot      = document.getElementById('sync-dot');
+  const label    = document.getElementById('sync-label');
+  const pushBtn  = document.getElementById('btn-force-sync');
+  const fetchBtn = document.getElementById('btn-force-fetch');
   dot.className = 'dim';
+  const syncing = state === 'ok' || state === 'err' || state === 'connecting';
+  pushBtn.style.display  = syncing ? '' : 'none';
+  fetchBtn.style.display = syncing ? '' : 'none';
   if (state === 'ok') {
     dot.className = 'ok';
     label.textContent = `Connected as ${username} · Room: ${ntfyTopic()}`;
-    pushBtn.style.display = '';
   } else if (state === 'err') {
     dot.className = 'err';
     label.textContent = 'Disconnected — retrying…';
-    pushBtn.style.display = '';
   } else if (state === 'connecting') {
     label.textContent = `Connecting as ${username}…`;
-    pushBtn.style.display = '';
   } else {
     label.textContent = 'Not syncing — click ⚙ Sync to join';
-    pushBtn.style.display = 'none';
   }
 }
 
@@ -1716,6 +1724,11 @@ document.getElementById('btn-view-compare').addEventListener('click', () => {
   document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-view-compare').classList.add('active');
   renderCompare();
+});
+
+document.getElementById('btn-force-fetch').addEventListener('click', () => {
+  pollHistory();
+  toast('Fetching scores from ntfy…');
 });
 
 document.getElementById('btn-force-sync').addEventListener('click', () => {
