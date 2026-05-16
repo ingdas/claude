@@ -1573,12 +1573,14 @@ function renderCompare() {
   thead.appendChild(htr);
   table.appendChild(thead);
 
-  // Body rows
+  // Body rows — skip entries where nobody has scored
   const tbody = document.createElement('tbody');
   sorted.forEach(entry => {
+    if (allUsers.every(u => peerTotal(u, entry.id) === null)) return;
+    const displayName = entry.country === 'United Kingdom' ? 'UK' : entry.country;
     const tr = document.createElement('tr');
     tr.innerHTML = `<td><div class="country-cell"><span class="flag">${entry.flag}</span>
-      <span class="country-name">${escHtml(entry.country)}</span></div></td>`;
+      <span class="country-name">${escHtml(displayName)}</span></div></td>`;
 
     allUsers.forEach((user, i) => {
       const td = document.createElement('td');
