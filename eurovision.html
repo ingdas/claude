@@ -1460,7 +1460,7 @@ function connectSSE() {
   });
 }
 
-function publishNow() {
+function publishNow(attempt = 0) {
   if (!username || !sseSource) return;
   const payload = { username, ts: Date.now(), entries: {} };
   entries.forEach(e => { payload.entries[e.id] = e.scores; });
@@ -1468,13 +1468,19 @@ function publishNow() {
     method: 'POST',
     body: JSON.stringify(payload),
   }).then(r => {
-    if (!r.ok) toast(`Sync publish failed (${r.status})`);
+    if (r.status === 429 && attempt < 4) {
+      const wait = parseInt(r.headers.get('Retry-After') || '10', 10);
+      toast(`Rate limited — retrying in ${wait}s`);
+      setTimeout(() => publishNow(attempt + 1), wait * 1000);
+    } else if (!r.ok) {
+      toast(`Sync publish failed (${r.status})`);
+    }
   }).catch(err => toast(`Sync error: ${err.message}`));
 }
 
 function scheduledPublish() {
   clearTimeout(publishTimerId);
-  publishTimerId = setTimeout(publishNow, 1800);
+  publishTimerId = setTimeout(publishNow, 5000);
 }
 
 function expirePeers() {
