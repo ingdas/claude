@@ -188,6 +188,15 @@
     .score-category-singing .score-pip.active,
     .score-category-singing .score-pip.preview { background: var(--sing-c); }
 
+    /* X Factor pip — color set via --xf-c inline */
+    .score-category-xfactor .score-pip { font-size: 0.52rem; }
+    .score-category-xfactor .score-pip.active,
+    .score-category-xfactor .score-pip.preview {
+      background: var(--xf-c, var(--muted));
+      border-color: var(--xf-c, var(--muted));
+      color: #fff;
+    }
+
     /* ── Desktop table ── */
     .table-wrap { overflow-x: auto; }
 
@@ -224,20 +233,6 @@
 
     .rank-cell { text-align: center; font-weight: 800; font-size: 0.95rem; width: 2.25rem; }
 
-    .now-playing-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      border-radius: 0.3rem;
-      cursor: pointer;
-      font-size: 0.75rem;
-      padding: 0.12rem 0.28rem;
-      transition: all 0.15s;
-      line-height: 1;
-    }
-    .now-playing-btn.active { background: #22c55e22; border-color: var(--green); color: var(--green); }
-    tr.is-playing td { background: rgba(34,197,94,0.05) !important; }
-    tr.is-playing td:first-child { border-left: 3px solid var(--green); }
 
     .country-cell { display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; overflow: hidden; }
     .flag { font-size: 1.2rem; line-height: 1; flex-shrink: 0; }
@@ -260,7 +255,7 @@
     .editable:focus { border-color: var(--accent); outline: none; background: var(--surface2); }
     .editable::placeholder { color: var(--muted); font-style: italic; }
 
-    .score-cell { min-width: 122px; }
+    .score-cell { min-width: 150px; }
 
     .total-cell { text-align: center; font-size: 1.05rem; font-weight: 800; width: 2.75rem; }
     .total-none { color: var(--muted); font-size: 0.78rem; font-weight: 400; }
@@ -302,8 +297,6 @@
       overflow: hidden;
       transition: border-color 0.2s;
     }
-    .entry-card.is-playing { border-color: var(--green); }
-    .entry-card.is-playing .card-header { background: rgba(34,197,94,0.07); }
 
     .card-header {
       display: flex;
@@ -335,6 +328,7 @@
     .cat-text.song-lbl { color: var(--song-c); }
     .cat-text.act-lbl  { color: var(--act-c); }
     .cat-text.sing-lbl { color: var(--sing-c); }
+    .cat-text.xf-lbl   { color: var(--gold); }
 
     /* Mobile pips stretch to fill */
     .card-scores .score-picker { flex: 1; }
@@ -608,11 +602,11 @@
         <thead>
           <tr>
             <th class="sortable" data-sort="runorder">#</th>
-            <th>▶</th>
             <th>Country · Artist · Song</th>
             <th class="sortable th-song" data-sort="song">♪ Song</th>
             <th class="sortable th-act"  data-sort="act">🎭 Act</th>
             <th class="sortable th-sing" data-sort="singing">🎤 Perf.</th>
+            <th style="color:var(--gold)">✦ X Factor</th>
             <th>Total</th>
             <th>Notes</th>
             <th></th>
@@ -693,10 +687,8 @@ const GRAND_FINAL = [
 // ─── State ────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'eurovision2026_v2';
-const PLAYING_KEY = 'eurovision2026_playing_v2';
 
 let entries = [];
-let playingId = null;
 let sortBy = 'runorder';
 let currentView = 'score';
 let searchQ = '';
@@ -710,7 +702,7 @@ function initEntries() {
     flag: c.flag,
     act: c.act,
     song: c.song,
-    scores: { song: null, act: null, singing: null },
+    scores: { song: null, act: null, singing: null, xfactor: null },
     notes: '',
   }));
 }
@@ -723,12 +715,13 @@ function loadState() {
     if (raw) {
       const parsed = JSON.parse(raw);
       entries = parsed.entries || initEntries();
-      nextId = parsed.nextId || 100;
+      // migrate: add xfactor to entries saved before it existed
+      entries.forEach(e => {
+        if (!('xfactor' in e.scores)) e.scores.xfactor = null;
+      });
     } else {
       entries = initEntries();
     }
-    const p = parseInt(localStorage.getItem(PLAYING_KEY) ?? 'NaN');
-    playingId = isNaN(p) ? null : p;
   } catch {
     entries = initEntries();
   }
@@ -738,26 +731,22 @@ function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ entries, nextId }));
 }
 
-function savePlaying() {
-  playingId === null
-    ? localStorage.removeItem(PLAYING_KEY)
-    : localStorage.setItem(PLAYING_KEY, String(playingId));
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTotal(e) {
-  return (e.scores.song || 0) + (e.scores.act || 0) + (e.scores.singing || 0);
+  return (e.scores.song || 0) + (e.scores.act || 0) + (e.scores.singing || 0) + (e.scores.xfactor || 0);
 }
 
 function hasScore(e) {
-  return e.scores.song !== null || e.scores.act !== null || e.scores.singing !== null;
+  return e.scores.song !== null || e.scores.act !== null || e.scores.singing !== null || e.scores.xfactor !== null;
 }
 
 function totalColor(t) {
-  if (t >= 25) return 'var(--gold)';
-  if (t >= 20) return 'var(--green)';
-  if (t >= 14) return 'var(--text)';
+  if (t >= 30) return 'var(--gold)';
+  if (t >= 24) return 'var(--green)';
+  if (t >= 15) return 'var(--text)';
+  if (t < 0)  return 'var(--red)';
   return 'var(--muted)';
 }
 
@@ -826,7 +815,7 @@ function createScorePicker(entry, category) {
 
   container.addEventListener('mouseleave', () => refresh(null));
 
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 0; i <= 10; i++) {
     const pip = document.createElement('div');
     pip.className = 'score-pip';
     pip.dataset.val = i;
@@ -841,6 +830,50 @@ function createScorePicker(entry, category) {
     pips.push(pip);
     container.appendChild(pip);
   }
+
+  refresh(null);
+  return container;
+}
+
+function createXFactorPicker(entry) {
+  const container = document.createElement('div');
+  container.className = 'score-picker score-category-xfactor';
+  const values = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
+  const pips = [];
+
+  function xfColor(v) {
+    if (v < 0) return 'var(--red)';
+    if (v > 0) return 'var(--gold)';
+    return 'var(--muted)';
+  }
+
+  function refresh(hoverVal) {
+    const cur = entry.scores.xfactor;
+    pips.forEach((pip, idx) => {
+      const v = values[idx];
+      const sel = hoverVal !== null ? v === hoverVal : (cur !== null && v === cur);
+      pip.classList.toggle('active',  hoverVal === null && sel);
+      pip.classList.toggle('preview', hoverVal !== null && sel);
+      if (sel) pip.style.setProperty('--xf-c', xfColor(v));
+      else     pip.style.removeProperty('--xf-c');
+    });
+  }
+
+  container.addEventListener('mouseleave', () => refresh(null));
+
+  values.forEach((v) => {
+    const pip = document.createElement('div');
+    pip.className = 'score-pip';
+    pip.textContent = v > 0 ? `+${v}` : String(v);
+    pip.addEventListener('mouseenter', () => refresh(v));
+    pip.addEventListener('click', () => {
+      entry.scores.xfactor = (entry.scores.xfactor === v) ? null : v;
+      save();
+      render();
+    });
+    pips.push(pip);
+    container.appendChild(pip);
+  });
 
   refresh(null);
   return container;
@@ -871,7 +904,7 @@ function updateStats() {
 
   const leader = sc.reduce((best, e) => getTotal(e) > getTotal(best) ? e : best);
   dim('stat-leader', `${leader.flag} ${leader.country}`);
-  dim('stat-top', `${getTotal(leader)} / 30`);
+  dim('stat-top', `${getTotal(leader)} / 35`);
   dim('stat-avg-song', avg(sc.map(e => e.scores.song)));
   dim('stat-avg-act',  avg(sc.map(e => e.scores.act)));
   dim('stat-avg-sing', avg(sc.map(e => e.scores.singing)));
@@ -888,7 +921,6 @@ function renderTable() {
 
   function addRow(entry, rank) {
     const tr = document.createElement('tr');
-    if (entry.id === playingId) tr.classList.add('is-playing');
 
     // Run order / rank
     const rankTd = document.createElement('td');
@@ -903,20 +935,6 @@ function renderTable() {
     }
     tr.appendChild(rankTd);
 
-    // Now playing
-    const nowTd = document.createElement('td');
-    const nowBtn = document.createElement('button');
-    nowBtn.className = 'now-playing-btn' + (entry.id === playingId ? ' active' : '');
-    nowBtn.title = entry.id === playingId ? 'Now playing' : 'Mark as playing';
-    nowBtn.textContent = '▶';
-    nowBtn.addEventListener('click', () => {
-      playingId = (playingId === entry.id) ? null : entry.id;
-      savePlaying();
-      render();
-    });
-    nowTd.appendChild(nowBtn);
-    tr.appendChild(nowTd);
-
     // Country + act + song (one line)
     const ctryTd = document.createElement('td');
     const sub = [entry.act, entry.song ? `"${entry.song}"` : ''].filter(Boolean).join(' · ');
@@ -930,6 +948,12 @@ function renderTable() {
       td.appendChild(createScorePicker(entry, cat));
       tr.appendChild(td);
     });
+
+    // X Factor
+    const xfTd = document.createElement('td');
+    xfTd.className = 'score-cell';
+    xfTd.appendChild(createXFactorPicker(entry));
+    tr.appendChild(xfTd);
 
     // Total
     const totTd = document.createElement('td');
@@ -958,7 +982,7 @@ function renderTable() {
     clearBtn.title = 'Clear scores';
     clearBtn.textContent = '↺';
     clearBtn.addEventListener('click', () => {
-      entry.scores = { song: null, act: null, singing: null };
+      entry.scores = { song: null, act: null, singing: null, xfactor: null };
       save(); render();
       toast('Cleared ' + entry.country);
     });
@@ -969,7 +993,6 @@ function renderTable() {
     delBtn.addEventListener('click', () => {
       if (confirm(`Remove ${entry.country}?`)) {
         entries = entries.filter(e => e.id !== entry.id);
-        if (playingId === entry.id) { playingId = null; savePlaying(); }
         save(); render();
       }
     });
@@ -1029,7 +1052,7 @@ function renderCards() {
 
   function appendCard(entry, rank) {
     const card = document.createElement('div');
-    card.className = 'entry-card' + (entry.id === playingId ? ' is-playing' : '');
+    card.className = 'entry-card';
     container.appendChild(card);
 
     // Header
@@ -1057,27 +1080,17 @@ function renderCards() {
     const actions = document.createElement('div');
     actions.className = 'card-header-actions';
 
-    const nowBtn = document.createElement('button');
-    nowBtn.className = 'now-playing-btn' + (entry.id === playingId ? ' active' : '');
-    nowBtn.title = 'Mark as playing';
-    nowBtn.textContent = '▶';
-    nowBtn.addEventListener('click', () => {
-      playingId = (playingId === entry.id) ? null : entry.id;
-      savePlaying(); render();
-    });
-
     const clearBtn = document.createElement('button');
     clearBtn.className = 'clear-row-btn';
     clearBtn.style.opacity = '1';
     clearBtn.title = 'Clear scores';
     clearBtn.textContent = '↺';
     clearBtn.addEventListener('click', () => {
-      entry.scores = { song: null, act: null, singing: null };
+      entry.scores = { song: null, act: null, singing: null, xfactor: null };
       save(); render();
       toast('Cleared ' + entry.country);
     });
 
-    actions.appendChild(nowBtn);
     actions.appendChild(clearBtn);
     header.appendChild(runOrderEl);
     header.appendChild(flagEl);
@@ -1096,15 +1109,23 @@ function renderCards() {
     ].forEach(({ cat, label, cls }) => {
       const row = document.createElement('div');
       row.className = 'score-row';
-
       const lbl = document.createElement('span');
       lbl.className = `cat-text ${cls}`;
       lbl.textContent = label;
-
       row.appendChild(lbl);
       row.appendChild(createScorePicker(entry, cat));
       scoresDiv.appendChild(row);
     });
+
+    // X Factor row
+    const xfRow = document.createElement('div');
+    xfRow.className = 'score-row';
+    const xfLbl = document.createElement('span');
+    xfLbl.className = 'cat-text xf-lbl';
+    xfLbl.textContent = '✦ X';
+    xfRow.appendChild(xfLbl);
+    xfRow.appendChild(createXFactorPicker(entry));
+    scoresDiv.appendChild(xfRow);
 
     card.appendChild(scoresDiv);
 
@@ -1116,10 +1137,10 @@ function renderCards() {
     totalEl.className = 'card-total';
     if (hasScore(entry)) {
       const t = getTotal(entry);
-      totalEl.textContent = `${t} / 30`;
+      totalEl.textContent = `${t} / 35`;
       totalEl.style.color = totalColor(t);
     } else {
-      totalEl.textContent = '— / 30';
+      totalEl.textContent = '— / 35';
       totalEl.style.color = 'var(--muted)';
     }
 
@@ -1189,6 +1210,7 @@ function renderRanking() {
         <span class="score-tag song-tag">♪ <span class="val">${entry.scores.song ?? '—'}</span></span>
         <span class="score-tag act-tag">🎭 <span class="val">${entry.scores.act ?? '—'}</span></span>
         <span class="score-tag sing-tag">🎤 <span class="val">${entry.scores.singing ?? '—'}</span></span>
+        <span class="score-tag" style="color:var(--muted)">✦ <span class="val" style="color:var(--gold)">${entry.scores.xfactor != null ? (entry.scores.xfactor > 0 ? '+' : '') + entry.scores.xfactor : '—'}</span></span>
 
       </div>
       <div class="ranking-total" style="color:${totalColor(t)}">${t}</div>
@@ -1253,7 +1275,8 @@ function buildExport() {
     scored.forEach((e, i) => {
       lines.push(`${i + 1}. ${e.flag} ${e.country}`);
       if (e.act || e.song) lines.push(`   ${[e.act, e.song ? `"${e.song}"` : ''].filter(Boolean).join(' — ')}`);
-      lines.push(`   ♪ ${e.scores.song ?? '—'}  🎭 ${e.scores.act ?? '—'}  🎤 ${e.scores.singing ?? '—'}  |  Total: ${getTotal(e)}/30  (Song · Act · Performance)`);
+      const xfStr = e.scores.xfactor != null ? (e.scores.xfactor > 0 ? `+${e.scores.xfactor}` : String(e.scores.xfactor)) : '—';
+      lines.push(`   ♪ ${e.scores.song ?? '—'}  🎭 ${e.scores.act ?? '—'}  🎤 ${e.scores.singing ?? '—'}  ✦ ${xfStr}  |  Total: ${getTotal(e)}/35`);
       if (e.notes) lines.push(`   Notes: ${e.notes}`);
       lines.push('');
     });
@@ -1330,7 +1353,7 @@ document.getElementById('btn-reset').addEventListener('click', () =>
 );
 
 document.getElementById('btn-confirm-reset').addEventListener('click', () => {
-  entries.forEach(e => { e.scores = { song: null, act: null, singing: null }; e.notes = ''; });
+  entries.forEach(e => { e.scores = { song: null, act: null, singing: null, xfactor: null }; e.notes = ''; });
   save(); render();
   document.getElementById('modal-reset').classList.remove('open');
   toast('All scores cleared');
