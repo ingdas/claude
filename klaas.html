@@ -836,27 +836,39 @@ function continueDraw(e) {
   if (!drawing) return;
   const pos = getCanvasPos(e);
   const p = getP();
-  const node = snapNode(pos.x, pos.y, p.gridSize);
-  if (!node) return;
-  // Check adjacency (only cardinal moves of 1 step)
   const last = path[path.length - 1];
-  const dc = Math.abs(node.col - last.col);
-  const dr = Math.abs(node.row - last.row);
-  if (dc + dr !== 1) return; // not adjacent
-  // Prevent revisiting (check if node already in path except for going back)
+  const lastPos = nodePos(last.col, last.row, p.gridSize);
+
+  // Determine cardinal direction from last node toward cursor
+  const dx = pos.x - lastPos.x;
+  const dy = pos.y - lastPos.y;
+  const dist = Math.hypot(dx, dy);
+
+  // Only advance once cursor is at least 40% of a cell away from last node
+  if (dist < CELL * 0.4) return;
+
+  const nextNode = Math.abs(dx) >= Math.abs(dy)
+    ? { col: last.col + (dx > 0 ? 1 : -1), row: last.row }
+    : { col: last.col, row: last.row + (dy > 0 ? 1 : -1) };
+
+  // Bounds check
+  if (nextNode.col < 0 || nextNode.col > p.gridSize || nextNode.row < 0 || nextNode.row > p.gridSize) return;
+
+  // Backtrack — undo last step
   const prev2 = path.length >= 2 ? path[path.length - 2] : null;
-  if (prev2 && node.col === prev2.col && node.row === prev2.row) {
-    // Going back — undo last step
+  if (prev2 && nextNode.col === prev2.col && nextNode.row === prev2.row) {
     path.pop();
     drawGrid();
     return;
   }
-  if (path.some(n => n.col === node.col && n.row === node.row)) return;
-  path.push(node);
+
+  // Prevent revisiting
+  if (path.some(n => n.col === nextNode.col && n.row === nextNode.row)) return;
+
+  path.push(nextNode);
   drawGrid();
 
-  // Check if we've reached the end
-  if (node.col === p.end.col && node.row === p.end.row) {
+  if (nextNode.col === p.end.col && nextNode.row === p.end.row) {
     checkSolution();
   }
 }
@@ -878,9 +890,17 @@ function checkSolution() {
   if (result.ok) {
     solved = true;
     canvas.classList.add('success');
-    setStatus('Solved!', 'ok');
+    setStatus('Solved! Moving on…', 'ok');
     document.getElementById('next-btn').disabled = false;
     updateProgress();
+    setTimeout(() => {
+      if (currentPuzzle + 1 >= puzzles.length) {
+        document.getElementById('puzzle-area').style.display = 'none';
+        document.getElementById('completion').style.display = 'flex';
+      } else {
+        loadPuzzle(currentPuzzle + 1);
+      }
+    }, 1200);
   } else {
     canvas.classList.add('error');
     setStatus(result.msg || 'Not quite — try again.', 'err');
