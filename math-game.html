@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The RSA Vault — Mathematical Cryptography Challenge</title>
+  <style>
+    :root {
+      --bg: #060b14;
+      --surface: #0d1526;
+      --panel: #0f1e35;
+      --border: #1a3050;
+      --cyan: #22d3ee;
+      --purple: #a78bfa;
+      --green: #34d399;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --dim: #475569;
+      --red: #f87171;
+      --yellow: #fbbf24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .hdr {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 12px;
+    }
+
+    .hdr-title {
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+
+    .hdr-stages { display: flex; gap: 6px; align-items: center; }
+
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--border); transition: background 0.4s;
+    }
+    .dot.active  { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+    .dot.done    { background: var(--green); }
+
+    #timer {
+      font-family: monospace;
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--cyan);
+      min-width: 80px;
+      text-align: right;
+      transition: color 0.5s;
+    }
+    #timer.warn { color: var(--yellow); }
+    #timer.crit { color: var(--red); animation: blink 1s step-start infinite; }
+
+    @keyframes blink { 50% { opacity: 0.4; } }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+      width: 100%;
+    }
+
+    .stage {
+      max-width: 780px;
+      width: 100%;
+      animation: fadeUp 0.45s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Stage chrome ── */
+    .stage-tag {
+      font-family: monospace;
+      color: var(--purple);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .stage-h1 {
+      font-size: 30px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .stage-lead {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+      margin-bottom: 28px;
+      max-width: 660px;
+    }
+
+    /* ── Panel ── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+    }
+
+    .card-lbl {
+      font-family: monospace;
+      color: var(--cyan);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    /* ── Math display ── */
+    .eq {
+      font-family: monospace;
+      font-size: 17px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 10px 0;
+      line-height: 2;
+    }
+
+    .v  { color: var(--cyan); }
+    .n  { color: var(--yellow); font-weight: bold; }
+    .op { color: var(--muted); }
+    .hi { color: var(--purple); font-weight: bold; }
+
+    /* ── Inputs ── */
+    input.mi {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 18px;
+      padding: 6px 10px;
+      width: 72px;
+      text-align: center;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+    input.mi::-webkit-inner-spin-button,
+    input.mi::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input.mi:focus { outline: none; border-color: var(--cyan); }
+    input.mi.ok  { border-color: var(--green); background: rgba(52,211,153,.08); }
+    input.mi.err { border-color: var(--red);   background: rgba(248,113,113,.08); animation: shake .3s; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%  { transform: translateX(-6px); }
+      75%  { transform: translateX(6px); }
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 11px 22px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-p {
+      background: var(--cyan);
+      color: var(--bg);
+    }
+    .btn-p:hover:not(:disabled) { background: #67e8f9; transform: translateY(-1px); }
+
+    .btn-s {
+      background: transparent;
+      color: var(--purple);
+      border: 1px solid var(--purple);
+    }
+    .btn-s:hover:not(:disabled) { background: rgba(167,139,250,.12); }
+
+    .btn:disabled { opacity: .4; cursor: default; transform: none !important; }
+
+    /* ── Feedback ── */
+    .fb {
+      padding: 11px 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-size: 14px;
+      line-height: 1.5;
+      display: none;
+    }
+    .fb.ok   { display:block; background:rgba(52,211,153,.1);  border:1px solid var(--green);  color:var(--green); }
+    .fb.err  { display:block; background:rgba(248,113,113,.1); border:1px solid var(--red);    color:var(--red); }
+    .fb.hint { display:block; background:rgba(167,139,250,.1); border:1px solid var(--purple); color:var(--purple); }
+
+    /* ── Cipher blocks ── */
+    .cipher-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .cb {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .cb-c { font-family: monospace; font-size: 22px; font-weight: bold; color: var(--purple); }
+    .cb-arrow { color: var(--dim); font-size: 13px; margin: 4px 0; }
+    .cb-letter {
+      font-size: 22px; font-weight: bold; color: var(--green);
+      min-height: 30px; font-family: monospace;
+    }
+    .cb input.mi { width: 60px; font-size: 16px; margin-top: 4px; }
+
+    /* ── Algorithm table ── */
+    .atable {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: monospace;
+      font-size: 15px;
+    }
+
+    .atable th {
+      padding: 10px 14px;
+      color: var(--cyan);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-bottom: 2px solid var(--border);
+      text-align: center;
+    }
+
+    .atable td {
+      padding: 12px 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .atable td.given { color: var(--muted); }
+    .atable tr.stop td { color: var(--dim); font-style: italic; }
+
+    /* ── Back-sub panel ── */
+    .backpanel { margin-top: 6px; }
+
+    .back-step {
+      font-family: monospace;
+      font-size: 16px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      line-height: 2.2;
+    }
+
+    /* ── Divider ── */
+    hr.sep { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── Intro cipher display ── */
+    .intro-cipher {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .ic {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: monospace;
+      font-size: 26px;
+      font-weight: bold;
+      color: var(--purple);
+    }
+
+    /* ── Progress bar ── */
+    .prog-wrap {
+      width: 100%;
+      max-width: 780px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .prog-bar {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── Victory ── */
+    .victory-wrap { text-align: center; padding: 20px; }
+
+    .vword {
+      font-family: monospace;
+      font-size: 52px;
+      font-weight: bold;
+      letter-spacing: 12px;
+      color: var(--green);
+      text-shadow: 0 0 20px var(--green), 0 0 40px var(--green);
+      animation: glow 2s ease-in-out infinite alternate;
+      margin: 20px 0;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px var(--green); }
+      to   { text-shadow: 0 0 30px var(--green), 0 0 60px var(--green); }
+    }
+
+    .v-stat {
+      display: inline-block;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 24px;
+      margin: 8px;
+      font-family: monospace;
+    }
+    .v-stat-lbl { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .v-stat-val { font-size: 22px; color: var(--cyan); font-weight: bold; }
+
+    /* ── Theory footer ── */
+    .theory {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0;
+    }
+
+    .theory summary {
+      cursor: pointer;
+      padding: 13px 24px;
+      color: var(--dim);
+      font-size: 13px;
+      letter-spacing: 1px;
+      user-select: none;
+    }
+
+    .theory summary:hover { color: var(--muted); }
+    .theory summary::-webkit-details-marker { display: none; }
+
+    .theory-body {
+      padding: 0 24px 20px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+      column-count: 2;
+      column-gap: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .theory-body { column-count: 1; }
+      .stage-h1 { font-size: 24px; }
+    }
+
+    .theory-body h4 {
+      color: var(--cyan);
+      font-family: monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 14px 0 6px;
+      break-after: avoid;
+    }
+
+    .theory-body p { margin-bottom: 8px; }
+
+    code {
+      font-family: monospace;
+      background: rgba(255,255,255,.06);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 13px;
+    }
+
+    /* ── Modular calculator ── */
+    .modcalc {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-family: monospace;
+      font-size: 16px;
+    }
+
+    .modcalc input.mi { width: 64px; }
+    .modcalc span.op { color: var(--muted); }
+
+    #calcResult {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--yellow);
+      min-width: 60px;
+      text-align: center;
+      font-family: monospace;
+    }
+
+    .check-icon { display: inline-block; margin-right: 4px; }
+
+    /* hints counter */
+    .hint-btn-wrap { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .hint-count { color: var(--dim); font-size: 13px; }
+
+    /* stage-specific spacing */
+    .row-gap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .mt8  { margin-top: 8px; }
+    .mt16 { margin-top: 16px; }
+    .mt24 { margin-top: 24px; }
+    .flex-end { display: flex; justify-content: flex-end; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-title">🔐 THE RSA VAULT</div>
+  <div class="hdr-stages" id="dots"></div>
+  <div id="timer">10:00</div>
+</div>
+
+<div class="main" id="main">
+  <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+  <div id="stageArea"></div>
+</div>
+
+<details class="theory" id="theoryDetails">
+  <summary>▸ RSA THEORY REFERENCE &nbsp;&nbsp;(click to expand)</summary>
+  <div class="theory-body" id="theoryBody"></div>
+</details>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   CONSTANTS — pre-verified RSA parameters
+   p=5  q=11  n=55  φ(n)=40  e=3  d=27
+   cipher([16,18,9,13,5]) → [26,2,14,52,15]  (A=1…Z=26)
+   ════════════════════════════════════════════════════════ */
+const RSA = {
+  p: 5, q: 11, n: 55, phi: 40, e: 3, d: 27,
+  plain:  [16,18,9,13,5],   // P  R  I  M  E
+  cipher: [26,2,14,52,15],  // encrypted
+  msg: 'PRIME'
+};
+
+const STAGES = ['intro','factor','keys','euclid','decrypt','victory'];
+let state = {
+  stage: 0,
+  hintsUsed: 0,
+  euclidStep: 0,   // 0=division, 1=backSub, 2=finalD
+  decryptedArr: new Array(5).fill(null),
+  startTime: null,
+  timerSec: 600,
+  timerRef: null,
+  completed: false,
+};
+
+/* ── timer ── */
+function startTimer() {
+  state.startTime = Date.now();
+  state.timerRef = setInterval(() => {
+    state.timerSec--;
+    renderTimer();
+    if (state.timerSec <= 0) { clearInterval(state.timerRef); onTimerEnd(); }
+  }, 1000);
+}
+
+function renderTimer() {
+  const el = document.getElementById('timer');
+  const m = Math.floor(Math.max(0,state.timerSec)/60);
+  const s = Math.max(0,state.timerSec)%60;
+  el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  el.className = state.timerSec <= 60 ? 'crit' : state.timerSec <= 180 ? 'warn' : '';
+}
+
+function onTimerEnd() {
+  if (!state.completed) {
+    document.getElementById('timer').textContent = '0:00';
+    showFb('Time\'s up! The vault remains locked. Refresh to try again.','err','globalFb');
+  }
+}
+
+function elapsed() {
+  if (!state.startTime) return 0;
+  return Math.floor((Date.now() - state.startTime)/1000);
+}
+
+/* ── dots ── */
+function renderDots() {
+  const wrap = document.getElementById('dots');
+  wrap.innerHTML = '';
+  const stages = ['intro','factor','keys','euclid','decrypt'];
+  stages.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' +
+      (i < state.stage ? ' done' : i===state.stage ? ' active' : '');
+    wrap.appendChild(d);
+  });
+}
+
+function renderProgress() {
+  const pct = Math.min(100, state.stage / 5 * 100);
+  document.getElementById('progBar').style.width = pct+'%';
+}
+
+/* ── stage navigation ── */
+function goStage(n) {
+  state.stage = n;
+  renderDots();
+  renderProgress();
+  const sa = document.getElementById('stageArea');
+  sa.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'stage';
+  div.innerHTML = buildStage(n);
+  sa.appendChild(div);
+  bindStage(n);
+  renderTheory(n);
+  window.scrollTo(0,0);
+}
+
+/* ═══════════════════════════ STAGE BUILDERS ═══════════════════════════ */
+
+function buildStage(n) {
+  switch(STAGES[n]) {
+    case 'intro':   return buildIntro();
+    case 'factor':  return buildFactor();
+    case 'keys':    return buildKeys();
+    case 'euclid':  return buildEuclid();
+    case 'decrypt': return buildDecrypt();
+    case 'victory': return buildVictory();
+  }
+}
+
+/* ─── INTRO ─── */
+function buildIntro() {
+  return `
+  <div class="stage-tag">Briefing</div>
+  <h1 class="stage-h1">A Secret Message Awaits</h1>
+  <p class="stage-lead">
+    An intercepted transmission has been encrypted using the RSA public-key cryptosystem.
+    The sender's public key is known: <span style="color:var(--cyan);font-family:monospace">n = 55, e = 3</span>.
+    To read the message you must reconstruct the private key — step by mathematical step.
+  </p>
+
+  <div class="card">
+    <div class="card-lbl">Intercepted Ciphertext</div>
+    <div class="intro-cipher">
+      ${RSA.cipher.map(c=>`<div class="ic">${c}</div>`).join('')}
+    </div>
+    <p style="color:var(--muted);font-size:14px;text-align:center">
+      Each number represents one letter of a 5-character message, encoded as A=1, B=2, …, Z=26,<br>
+      then encrypted via <span style="font-family:monospace">c ≡ m<sup>e</sup> (mod n)</span>.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-lbl">Your Mission — 4 stages</div>
+    <div class="eq">
+      <span class="v">Stage 1</span> <span class="op">—</span> Factor <span class="n">n = 55</span> into its prime components p and q<br>
+      <span class="v">Stage 2</span> <span class="op">—</span> Compute Euler's totient <span class="n">φ(n)</span> and verify the key pair<br>
+      <span class="v">Stage 3</span> <span class="op">—</span> Run the Extended Euclidean Algorithm to find <span class="n">d</span><br>
+      <span class="v">Stage 4</span> <span class="op">—</span> Decrypt: compute <span class="n">m ≡ c<sup>d</sup> (mod n)</span> for each block
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:center;margin-top:8px">
+    <button class="btn btn-p" id="btnStart" style="padding:14px 40px;font-size:16px">
+      Begin — 10:00 on the clock
+    </button>
+  </div>
+  <div id="globalFb" class="fb"></div>
+  `;
+}
+
+/* ─── STAGE 1: FACTOR ─── */
+function buildFactor() {
+  return `
+  <div class="stage-tag">Stage 1 of 4</div>
+  <h1 class="stage-h1">Factor the Modulus</h1>
+  <p class="stage-lead">
+    RSA security rests on the difficulty of factoring <em>n</em>. But for small <em>n</em>, it's trivial.
+    The public key tells us <strong style="color:var(--cyan)">n = 55</strong>.
+    Find the two distinct prime factors <em>p</em> and <em>q</em>.
+  </p>
+
+  <div class="card">
+    <div class="card-lbl">Your Task</div>
+    <div class="eq">
+      <span class="n">55</span> <span class="op">=</span>
+      <span class="v">p</span> <span class="op">×</span> <span class="v">q</span>
+      &nbsp;&nbsp;where <span class="v">p</span>, <span class="v">q</span> are prime and <span class="v">p</span> <span class="op">&lt;</span> <span class="v">q</span>
+    </div>
+    <div class="row-gap mt16">
+      <span style="font-family:monospace;font-size:16px;color:var(--muted)">p =</span>
+      <input class="mi" id="inP" type="number" min="2" max="29" placeholder="?" />
+      <span style="font-family:monospace;font-size:16px;color:var(--muted)">q =</span>
+      <input class="mi" id="inQ" type="number" min="2" max="29" placeholder="?" />
+      <button class="btn btn-p" id="btnFactor">Verify</button>
+    </div>
+    <div id="fbFactor" class="fb"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-lbl">Hint</div>
+    <p style="color:var(--muted);font-size:14px">
+      Check divisibility by small primes: 2, 3, 5, 7, 11, 13…
+      Since √55 ≈ 7.4, you only need to test primes up to 7.
+    </p>
+  </div>
+  `;
+}
+
+/* ─── STAGE 2: KEYS ─── */
+function buildKeys() {
+  return `
+  <div class="stage-tag">Stage 2 of 4</div>
+  <h1 class="stage-h1">Compute the Key Parameters</h1>
+  <p class="stage-lead">
+    With <span style="color:var(--cyan);font-family:monospace">p = 5</span> and
+    <span style="color:var(--cyan);font-family:monospace">q = 11</span> in hand,
+    compute Euler's totient and verify the public exponent is valid.
+  </p>
+
+  <div class="card">
+    <div class="card-lbl">Step 2a — Euler's Totient</div>
+    <div class="eq">
+      <span class="v">φ(n)</span> <span class="op">=</span>
+      <span class="op">(</span><span class="v">p</span><span class="op"> − 1)(</span><span class="v">q</span><span class="op"> − 1)</span>
+      <span class="op">=</span>
+      <span class="op">(</span><span class="n">5</span><span class="op"> − 1)(</span><span class="n">11</span><span class="op"> − 1)</span>
+      <span class="op">=</span>
+      <input class="mi" id="inPhi" type="number" placeholder="?" />
+    </div>
+    <div id="fbPhi" class="fb"></div>
+  </div>
+
+  <div class="card" id="cardGcd" style="display:none">
+    <div class="card-lbl">Step 2b — Validate the Public Exponent</div>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:12px">
+      For e to be a valid RSA exponent we need <code>gcd(e, φ(n)) = 1</code>.
+      The sender chose <strong style="color:var(--cyan)">e = 3</strong>.
+      Compute <code>gcd(3, 40)</code> using repeated division and confirm it equals 1.
+    </p>
+    <div class="eq">
+      <span class="op">Step 1: &nbsp; </span>
+      <span class="n">40</span> <span class="op">=</span>
+      <input class="mi" id="inGcdQ" type="number" placeholder="?" style="width:56px"/>
+      <span class="op"> × </span><span class="n">3</span>
+      <span class="op"> + </span>
+      <input class="mi" id="inGcdR" type="number" placeholder="?" style="width:56px"/>
+      <br>
+      <span class="op">Step 2: &nbsp; </span>
+      <span class="n">3</span>
+      <span class="op">= </span>
+      <span class="n">3</span>
+      <span class="op"> × </span>
+      <input class="mi" id="inGcd2" type="number" placeholder="?" style="width:56px"/>
+      <span class="op"> + 0 &nbsp;&nbsp; ⇒ &nbsp; gcd = </span>
+      <span class="hi">1</span> <span class="op">✓</span>
+    </div>
+    <button class="btn btn-p mt8" id="btnGcd">Verify GCD steps</button>
+    <div id="fbGcd" class="fb"></div>
+  </div>
+  `;
+}
+
+/* ─── STAGE 3: EXTENDED EUCLIDEAN ─── */
+function buildEuclid() {
+  return `
+  <div class="stage-tag">Stage 3 of 4</div>
+  <h1 class="stage-h1">Find the Private Key</h1>
+  <p class="stage-lead">
+    The private exponent <span style="color:var(--cyan);font-family:monospace">d</span> satisfies
+    <span style="color:var(--cyan);font-family:monospace">ed ≡ 1 (mod φ(n))</span>,
+    i.e. <span style="font-family:monospace;color:var(--yellow)">3d ≡ 1 (mod 40)</span>.
+    Use the Extended Euclidean Algorithm — first confirm gcd = 1, then back-substitute.
+  </p>
+
+  <div class="card">
+    <div class="card-lbl">Division Table — fill in quotients &amp; remainders</div>
+    <table class="atable">
+      <thead>
+        <tr>
+          <th>#</th><th>Dividend <em>a</em></th><th>Divisor <em>b</em></th>
+          <th>Quotient <em>q = ⌊a/b⌋</em></th><th>Remainder <em>r = a mod b</em></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="given">1</td>
+          <td class="given" style="color:var(--yellow)">40</td>
+          <td class="given" style="color:var(--yellow)">3</td>
+          <td><input class="mi" id="eq1q" type="number" placeholder="?" /></td>
+          <td><input class="mi" id="eq1r" type="number" placeholder="?" /></td>
+        </tr>
+        <tr>
+          <td class="given">2</td>
+          <td class="given" style="color:var(--muted)">3</td>
+          <td class="given" style="color:var(--muted)"><em>prev r</em></td>
+          <td><input class="mi" id="eq2q" type="number" placeholder="?" /></td>
+          <td class="given" style="color:var(--dim)">0</td>
+        </tr>
+        <tr class="stop">
+          <td>—</td><td colspan="4">gcd found = last non-zero remainder</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="flex-between mt16">
+      <button class="btn btn-p" id="btnEucDiv">Check Division</button>
+      <div id="fbEucDiv" class="fb" style="flex:1;margin-left:12px;margin-bottom:0"></div>
+    </div>
+  </div>
+
+  <div class="card" id="cardBackSub" style="display:none">
+    <div class="card-lbl">Back-Substitution — express 1 as a linear combination</div>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:14px">
+      From row 1: &nbsp;<code>1 = 40 − q × 3</code>.
+      Substitute the quotient you found to write 1 in terms of 40 and 3.
+    </p>
+    <div class="back-step">
+      <span class="op">1 = </span>
+      <span class="n">40</span>
+      <span class="op"> − </span>
+      <input class="mi" id="inBack" type="number" placeholder="q" />
+      <span class="op"> × </span>
+      <span class="n">3</span>
+    </div>
+    <div class="flex-between">
+      <button class="btn btn-p" id="btnBack">Check</button>
+      <div id="fbBack" class="fb" style="flex:1;margin-left:12px;margin-bottom:0"></div>
+    </div>
+  </div>
+
+  <div class="card" id="cardFinalD" style="display:none">
+    <div class="card-lbl">Final Step — reduce to find d</div>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:14px">
+      From the back-substitution: &nbsp;<code>1 ≡ −13 × 3 (mod 40)</code>.
+      A negative representative isn't conventional — convert to a positive residue in [1, 39].
+    </p>
+    <div class="back-step">
+      <span class="op">d ≡ −13 ≡ </span>
+      <input class="mi" id="inD" type="number" placeholder="?" />
+      <span class="op"> (mod 40)</span>
+    </div>
+    <div class="hint-btn-wrap">
+      <button class="btn btn-p" id="btnFinalD">Lock In d</button>
+      <button class="btn btn-s" id="btnHintD">Hint</button>
+      <span class="hint-count" id="hintCount"></span>
+    </div>
+    <div id="fbFinalD" class="fb"></div>
+  </div>
+  `;
+}
+
+/* ─── STAGE 4: DECRYPT ─── */
+function buildDecrypt() {
+  const blocks = RSA.cipher.map((c,i) => `
+    <div class="cb">
+      <div class="cb-c">${c}</div>
+      <div class="cb-arrow">↓ c<sup>${RSA.d}</sup> mod ${RSA.n}</div>
+      <input class="mi" id="dec${i}" type="number" placeholder="?" data-idx="${i}" />
+      <div class="cb-letter" id="letter${i}"></div>
+    </div>
+  `).join('');
+
+  return `
+  <div class="stage-tag">Stage 4 of 4</div>
+  <h1 class="stage-h1">Decrypt the Message</h1>
+  <p class="stage-lead">
+    Private key: <span style="color:var(--cyan);font-family:monospace">d = 27, n = 55</span>.
+    For each ciphertext block compute
+    <span style="font-family:monospace;color:var(--yellow)">m ≡ c<sup>27</sup> (mod 55)</span>,
+    then decode using A=1, B=2, …, Z=26.
+    Use the calculator below to compute modular exponentiations.
+  </p>
+
+  <div class="card">
+    <div class="card-lbl">Modular Exponentiation Calculator</div>
+    <div class="modcalc">
+      <span class="op">(</span>
+      <input class="mi" id="calcBase" type="number" placeholder="base" style="width:70px" />
+      <span class="op">)<sup style="font-size:12px"> exp </sup></span>
+      <input class="mi" id="calcExp"  type="number" placeholder="exp"  style="width:70px" value="${RSA.d}" />
+      <span class="op">mod</span>
+      <input class="mi" id="calcMod"  type="number" placeholder="mod"  style="width:70px" value="${RSA.n}" />
+      <span class="op">=</span>
+      <span id="calcResult">—</span>
+      <button class="btn btn-p" id="btnCalc" style="padding:8px 16px">Compute</button>
+    </div>
+    <p style="color:var(--dim);font-size:12px;margin-top:8px;font-family:monospace">
+      Tip: Enter each ciphertext value as the base, keep exp=27, mod=55.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-lbl">Enter Decrypted Values (numbers 1–26), then the letter appears</div>
+    <div class="cipher-row">${blocks}</div>
+    <button class="btn btn-p mt16" id="btnCheckDecrypt">Reveal Message</button>
+    <div id="fbDecrypt" class="fb"></div>
+  </div>
+  `;
+}
+
+/* ─── VICTORY ─── */
+function buildVictory() {
+  const t = elapsed();
+  const m = Math.floor(t/60), s = t%60;
+  const bonus = state.hintsUsed===0 ? ' — with no hints!' : ` — ${state.hintsUsed} hint${state.hintsUsed>1?'s':''} used`;
+  return `
+  <div class="victory-wrap">
+    <div class="stage-tag">Vault Unlocked</div>
+    <h1 class="stage-h1" style="font-size:36px">The message reads:</h1>
+    <div class="vword">${RSA.msg}</div>
+    <p style="color:var(--muted);margin-bottom:28px">
+      Decrypted in <strong style="color:var(--cyan)">${m}m ${s}s</strong>${bonus}
+    </p>
+    <div>
+      <div class="v-stat">
+        <div class="v-stat-lbl">Primes</div>
+        <div class="v-stat-val">p=5, q=11</div>
+      </div>
+      <div class="v-stat">
+        <div class="v-stat-lbl">Modulus n</div>
+        <div class="v-stat-val">55</div>
+      </div>
+      <div class="v-stat">
+        <div class="v-stat-lbl">φ(n)</div>
+        <div class="v-stat-val">40</div>
+      </div>
+      <div class="v-stat">
+        <div class="v-stat-lbl">Public e</div>
+        <div class="v-stat-val">3</div>
+      </div>
+      <div class="v-stat">
+        <div class="v-stat-lbl">Private d</div>
+        <div class="v-stat-val">27</div>
+      </div>
+    </div>
+    <hr class="sep">
+    <div class="card" style="text-align:left;max-width:600px;margin:20px auto 0">
+      <div class="card-lbl">Why This Works — Euler's Theorem</div>
+      <p style="color:var(--muted);font-size:14px;line-height:1.8">
+        RSA correctness follows from <strong style="color:var(--cyan)">Euler's theorem</strong>:
+        for any <em>m</em> with gcd(m, n)=1, &nbsp;<code>m<sup>φ(n)</sup> ≡ 1 (mod n)</code>.
+        <br><br>
+        Since ed ≡ 1 (mod φ(n)), we have ed = 1 + kφ(n) for some integer k.
+        Therefore: &nbsp;<code>m<sup>ed</sup> = m<sup>1+kφ(n)</sup> = m · (m<sup>φ(n)</sup>)<sup>k</sup> ≡ m · 1 ≡ m (mod n)</code>.
+        <br><br>
+        Encryption and decryption are inverses — a beautiful consequence of number theory.
+      </p>
+    </div>
+    <button class="btn btn-p mt24" onclick="resetGame()" style="padding:12px 32px">
+      Play Again
+    </button>
+  </div>
+  `;
+}
+
+/* ═══════════════════════════ BINDERS ═══════════════════════════ */
+
+function bindStage(n) {
+  switch(STAGES[n]) {
+    case 'intro':   bindIntro();   break;
+    case 'factor':  bindFactor();  break;
+    case 'keys':    bindKeys();    break;
+    case 'euclid':  bindEuclid();  break;
+    case 'decrypt': bindDecrypt(); break;
+  }
+}
+
+function bindIntro() {
+  document.getElementById('btnStart').addEventListener('click', () => {
+    startTimer();
+    goStage(1);
+  });
+}
+
+function bindFactor() {
+  const btn = document.getElementById('btnFactor');
+  const go = () => {
+    const p = parseInt(document.getElementById('inP').value);
+    const q = parseInt(document.getElementById('inQ').value);
+    const fb = document.getElementById('fbFactor');
+    const ok = p===RSA.p && q===RSA.q;
+    const swapped = p===RSA.q && q===RSA.p;
+
+    clearInput('inP'); clearInput('inQ');
+
+    if (!p || !q) {
+      setFb(fb,'err','Enter values for both p and q.');
+    } else if (swapped) {
+      setFb(fb,'err',`Correct primes! But keep p < q, so p = ${RSA.p}, q = ${RSA.q}.`);
+      markInput('inP','err'); markInput('inQ','err');
+    } else if (p*q !== RSA.n) {
+      setFb(fb,'err',`${p} × ${q} = ${p*q} ≠ 55. Try again.`);
+      markInput('inP','err'); markInput('inQ','err');
+    } else if (!isPrime(p) || !isPrime(q)) {
+      const bad = !isPrime(p)?p:q;
+      setFb(fb,'err',`${bad} is not prime. Both factors must be prime.`);
+      markInput('inP','err'); markInput('inQ','err');
+    } else if (ok) {
+      markInput('inP','ok'); markInput('inQ','ok');
+      setFb(fb,'ok','✓ Correct! 55 = 5 × 11. Both are prime. Proceeding to key generation.');
+      btn.disabled = true;
+      setTimeout(()=>goStage(2), 1200);
+    } else {
+      setFb(fb,'err',`${p} and ${q} multiply to ${p*q} ≠ 55.`);
+    }
+  };
+  btn.addEventListener('click', go);
+  ['inP','inQ'].forEach(id=>document.getElementById(id).addEventListener('keydown', e=>{if(e.key==='Enter')go();}));
+}
+
+function bindKeys() {
+  const btnPhi = document.getElementById('inPhi');
+
+  btnPhi.addEventListener('keydown', e=>{ if(e.key==='Enter') checkPhi(); });
+  btnPhi.addEventListener('input', ()=>{ clearInput('inPhi'); });
+
+  document.getElementById('inPhi').addEventListener('change', checkPhi);
+  // Watch for phi input completion
+  function checkPhi() {
+    const v = parseInt(document.getElementById('inPhi').value);
+    const fb = document.getElementById('fbPhi');
+    if (v === RSA.phi) {
+      markInput('inPhi','ok');
+      setFb(fb,'ok','✓ φ(55) = 4 × 10 = 40. Now verify the public exponent.');
+      setTimeout(()=>{ document.getElementById('cardGcd').style.display=''; }, 400);
+    } else if (!isNaN(v)) {
+      markInput('inPhi','err');
+      setFb(fb,'err',`φ(n) = (p−1)(q−1). With p=5, q=11: (5−1)×(11−1) = 4×10 = ?`);
+    }
+  }
+
+  // bind check phi button if present, else use input
+  document.getElementById('inPhi').addEventListener('blur', checkPhi);
+
+  // add a check button
+  const phiCard = document.querySelector('#cardGcd').previousElementSibling;
+  const checkBtn = document.createElement('button');
+  checkBtn.className = 'btn btn-p mt8';
+  checkBtn.textContent = 'Check φ(n)';
+  checkBtn.addEventListener('click', checkPhi);
+  document.getElementById('fbPhi').before(checkBtn);
+
+  document.getElementById('btnGcd').addEventListener('click', () => {
+    const q1 = parseInt(document.getElementById('inGcdQ').value);
+    const r1 = parseInt(document.getElementById('inGcdR').value);
+    const q2 = parseInt(document.getElementById('inGcd2').value);
+    const fb = document.getElementById('fbGcd');
+
+    const ok1 = q1===13 && r1===1;
+    const ok2 = q2===1;
+
+    if (ok1 && ok2) {
+      ['inGcdQ','inGcdR','inGcd2'].forEach(id=>markInput(id,'ok'));
+      setFb(fb,'ok','✓ gcd(3, 40) = 1 confirmed. The public exponent e = 3 is valid. Onward!');
+      document.getElementById('btnGcd').disabled = true;
+      setTimeout(()=>goStage(3), 1400);
+    } else {
+      if (!ok1) {
+        setFb(fb,'err',`Row 1: 40 ÷ 3 = 13 remainder 1. You need 40 = q×3 + r where 0 ≤ r < 3.`);
+        if(q1!==13) markInput('inGcdQ','err');
+        if(r1!==1)  markInput('inGcdR','err');
+      } else if (!ok2) {
+        markInput('inGcd2','err');
+        setFb(fb,'err',`Row 2: 3 ÷ 1 = ? The divisor is the previous remainder (r=1). 3 = ? × 1 + 0.`);
+      }
+    }
+  });
+}
+
+function bindEuclid() {
+  document.getElementById('btnEucDiv').addEventListener('click', () => {
+    const q1 = parseInt(document.getElementById('eq1q').value);
+    const r1 = parseInt(document.getElementById('eq1r').value);
+    const q2 = parseInt(document.getElementById('eq2q').value);
+    const fb = document.getElementById('fbEucDiv');
+
+    const okQ1 = q1===13, okR1 = r1===1, okQ2 = q2===3;
+
+    if (okQ1 && okR1 && okQ2) {
+      ['eq1q','eq1r','eq2q'].forEach(id=>markInput(id,'ok'));
+      setFb(fb,'ok','✓ Division table complete. gcd(3,40) = 1. Now back-substitute.');
+      document.getElementById('btnEucDiv').disabled = true;
+      setTimeout(()=>{ document.getElementById('cardBackSub').style.display=''; }, 500);
+    } else {
+      if (!okQ1 || !okR1) {
+        setFb(fb,'err','Row 1: 40 ÷ 3 — what is the quotient and remainder? Remember 40 = q×3 + r.');
+        if(!okQ1) markInput('eq1q','err');
+        if(!okR1) markInput('eq1r','err');
+      } else if (!okQ2) {
+        setFb(fb,'err','Row 2: now the dividend is 3, divisor is 1 (prev remainder). 3 ÷ 1 = ?');
+        markInput('eq2q','err');
+      }
+    }
+  });
+
+  document.getElementById('btnBack').addEventListener('click', () => {
+    const v = parseInt(document.getElementById('inBack').value);
+    const fb = document.getElementById('fbBack');
+    if (v===13) {
+      markInput('inBack','ok');
+      setFb(fb,'ok','✓ Correct. So 1 = 40 − 13×3, meaning 3×(−13) ≡ 1 (mod 40). Final step!');
+      document.getElementById('btnBack').disabled = true;
+      setTimeout(()=>{ document.getElementById('cardFinalD').style.display=''; }, 500);
+    } else {
+      markInput('inBack','err');
+      setFb(fb,'err','Use the quotient from row 1 of the division table: 1 = 40 − ___ × 3.');
+    }
+  });
+
+  document.getElementById('btnFinalD').addEventListener('click', () => {
+    const v = parseInt(document.getElementById('inD').value);
+    const fb = document.getElementById('fbFinalD');
+    if (v===RSA.d) {
+      markInput('inD','ok');
+      setFb(fb,'ok','✓ d = 27! Check: 3 × 27 = 81 = 2×40 + 1 ≡ 1 (mod 40). Private key secured!');
+      document.getElementById('btnFinalD').disabled = true;
+      setTimeout(()=>goStage(4), 1500);
+    } else {
+      markInput('inD','err');
+      setFb(fb,'err',`Need to convert −13 to a positive residue mod 40. −13 + 40 = ?`);
+    }
+  });
+
+  document.getElementById('btnHintD').addEventListener('click', () => {
+    state.hintsUsed++;
+    const fb = document.getElementById('fbFinalD');
+    setFb(fb,'hint','Hint: −13 mod 40. Add 40 to −13 to get an equivalent positive value. −13 + 40 = 27.');
+    document.getElementById('hintCount').textContent = `(${state.hintsUsed} hint${state.hintsUsed>1?'s':''} used)`;
+  });
+}
+
+function bindDecrypt() {
+  // Calculator
+  document.getElementById('btnCalc').addEventListener('click', () => {
+    const base = parseInt(document.getElementById('calcBase').value);
+    const exp  = parseInt(document.getElementById('calcExp').value);
+    const mod  = parseInt(document.getElementById('calcMod').value);
+    if (isNaN(base)||isNaN(exp)||isNaN(mod)||mod<1) {
+      document.getElementById('calcResult').textContent = 'err';
+      return;
+    }
+    document.getElementById('calcResult').textContent = modpow(base, exp, mod);
+  });
+
+  // Decode inputs
+  RSA.cipher.forEach((_,i) => {
+    document.getElementById(`dec${i}`).addEventListener('input', () => {
+      const v = parseInt(document.getElementById(`dec${i}`).value);
+      const el = document.getElementById(`letter${i}`);
+      if (v>=1 && v<=26) {
+        el.textContent = String.fromCharCode(64+v);
+        el.style.color = v===RSA.plain[i] ? 'var(--green)' : 'var(--red)';
+      } else {
+        el.textContent = '';
+      }
+    });
+  });
+
+  document.getElementById('btnCheckDecrypt').addEventListener('click', () => {
+    const fb = document.getElementById('fbDecrypt');
+    const vals = RSA.cipher.map((_,i)=>parseInt(document.getElementById(`dec${i}`).value));
+
+    const allOk = vals.every((v,i)=>v===RSA.plain[i]);
+    const someWrong = vals.map((v,i)=>v!==RSA.plain[i]);
+
+    if (allOk) {
+      state.completed = true;
+      clearInterval(state.timerRef);
+      setFb(fb,'ok','✓ All correct! Message decrypted. Opening vault…');
+      setTimeout(()=>goStage(5), 1200);
+    } else {
+      let msg = 'Some values are wrong. ';
+      RSA.cipher.forEach((_,i)=>{
+        if(someWrong[i]) markInput(`dec${i}`,'err');
+        else markInput(`dec${i}`,'ok');
+      });
+      msg += 'Remember: compute c^27 mod 55, then look up the letter.';
+      setFb(fb,'err',msg);
+    }
+  });
+}
+
+/* ═══════════════════════════ THEORY CONTENT ═══════════════════════════ */
+
+const THEORIES = {
+  intro: `
+    <h4>RSA Overview</h4>
+    <p>RSA (Rivest–Shamir–Adleman, 1977) is an asymmetric cryptosystem. The public key (n, e) is shared openly; the private key d is kept secret. Anyone can encrypt, only the holder of d can decrypt.</p>
+    <h4>Key Generation</h4>
+    <p>1. Choose primes p, q.<br>2. Compute n = pq and φ(n) = (p−1)(q−1).<br>3. Pick e with 1 &lt; e &lt; φ(n) and gcd(e, φ(n)) = 1.<br>4. Compute d ≡ e⁻¹ (mod φ(n)).</p>
+    <h4>Encryption / Decryption</h4>
+    <p>Encrypt: c ≡ mᵉ (mod n).<br>Decrypt: m ≡ cᵈ (mod n).</p>
+    <h4>Security</h4>
+    <p>Factoring large n (2048-bit in practice) is computationally infeasible. This puzzle uses tiny n = 55 for educational tractability.</p>
+  `,
+  factor: `
+    <h4>Factoring n</h4>
+    <p>Given n = 55, trial division by primes ≤ √55 ≈ 7.4 suffices: test 2, 3, 5, 7.</p>
+    <h4>Trial Division</h4>
+    <p>55 ÷ 2 = 27.5 (no); 55 ÷ 3 = 18.3 (no); 55 ÷ 5 = 11 ✓. So p=5, q=11.</p>
+    <h4>Primality</h4>
+    <p>5 is prime (only divisors 1 and 5). 11 is prime (only divisors 1 and 11).</p>
+  `,
+  keys: `
+    <h4>Euler's Totient φ(n)</h4>
+    <p>For n = pq (product of distinct primes): φ(n) = (p−1)(q−1). Here: φ(55) = 4 × 10 = 40.</p>
+    <h4>Valid Public Exponent</h4>
+    <p>e must satisfy gcd(e, φ(n)) = 1 so that the inverse d exists. Common choices: 3, 17, 65537.</p>
+    <h4>Euclidean Algorithm</h4>
+    <p>gcd(40, 3): 40 = 13×3 + 1; 3 = 3×1 + 0. So gcd = 1. ✓</p>
+  `,
+  euclid: `
+    <h4>Extended Euclidean Algorithm</h4>
+    <p>Extends the standard GCD algorithm to also find integers x, y such that ax + by = gcd(a,b). Used here with a=3, b=40 to find d=3⁻¹ mod 40.</p>
+    <h4>Back-Substitution</h4>
+    <p>From 1 = 40 − 13×3 we read off: coefficient of 3 is −13. So 3×(−13) ≡ 1 (mod 40), giving d = −13 ≡ 27 (mod 40).</p>
+    <h4>Verify</h4>
+    <p>3 × 27 = 81 = 2×40 + 1 ≡ 1 (mod 40). ✓</p>
+  `,
+  decrypt: `
+    <h4>Modular Exponentiation</h4>
+    <p>To compute c²⁷ mod 55, use repeated squaring (square-and-multiply). Write 27 = 11011₂ = 16+8+2+1 and chain squarings.</p>
+    <h4>Letter Encoding</h4>
+    <p>A=1, B=2, …, Z=26. After computing m = c²⁷ mod 55, convert: letter = chr(m + 64).</p>
+    <h4>Example</h4>
+    <p>26²⁷ mod 55: 26²=676≡16, 26⁴≡256≡36, 26⁸≡1296≡31, 26¹⁶≡961≡26; 26²⁷=26¹⁶·26⁸·26²·26 ≡ 26·31·16·26 ≡ 16 = P. ✓</p>
+  `,
+  victory: `
+    <h4>Euler's Theorem</h4>
+    <p>For gcd(m,n)=1: m^φ(n) ≡ 1 (mod n). Since ed = 1+kφ(n), m^(ed) = m·(m^φ(n))^k ≡ m (mod n).</p>
+    <h4>RSA Today</h4>
+    <p>Real RSA uses 2048–4096-bit primes. The same mathematics applies; only the scale changes. Modern factoring algorithms (NFS) remain infeasible at these sizes.</p>
+  `
+};
+
+function renderTheory(n) {
+  const key = STAGES[n];
+  document.getElementById('theoryBody').innerHTML = THEORIES[key] || '';
+}
+
+/* ═══════════════════════════ HELPERS ═══════════════════════════ */
+
+function isPrime(n) {
+  if (n<2) return false;
+  if (n===2) return true;
+  if (n%2===0) return false;
+  for (let i=3;i*i<=n;i+=2) if(n%i===0) return false;
+  return true;
+}
+
+function modpow(base, exp, mod) {
+  let result = 1n;
+  base = BigInt(base) % BigInt(mod);
+  exp  = BigInt(exp);
+  const m = BigInt(mod);
+  while (exp > 0n) {
+    if (exp % 2n === 1n) result = result * base % m;
+    exp = exp / 2n;
+    base = base * base % m;
+  }
+  return Number(result);
+}
+
+function setFb(el, cls, msg) {
+  el.className = 'fb ' + cls;
+  el.textContent = msg;
+}
+
+function showFb(msg, cls, id) {
+  const el = document.getElementById(id);
+  if (el) setFb(el, cls, msg);
+}
+
+function markInput(id, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('ok','err');
+  el.classList.add(cls);
+}
+
+function clearInput(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('ok','err');
+}
+
+function resetGame() {
+  clearInterval(state.timerRef);
+  state = {
+    stage: 0, hintsUsed: 0, euclidStep: 0,
+    decryptedArr: new Array(5).fill(null),
+    startTime: null, timerSec: 600,
+    timerRef: null, completed: false,
+  };
+  renderTimer();
+  goStage(0);
+}
+
+/* ═══════════════════════════ INIT ═══════════════════════════ */
+goStage(0);
+renderTimer();
+</script>
+</body>
+</html>
