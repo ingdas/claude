@@ -40,28 +40,6 @@
       100% { transform: translateY(110dvh) rotate(720deg); opacity: 0; }
     }
 
-    .header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      background: rgba(16, 16, 40, 0.92);
-      backdrop-filter: blur(8px);
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 10;
-      border-bottom: 2px solid #f39c12;
-      gap: 12px;
-    }
-
-    .header-title {
-      font-size: clamp(0.7rem, 3vw, 1rem);
-      color: #f39c12;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      line-height: 1.2;
-    }
-
     .counter {
       font-size: clamp(1rem, 4vw, 1.4rem);
       font-weight: bold;
@@ -70,7 +48,7 @@
       padding: 4px 14px;
       border-radius: 20px;
       white-space: nowrap;
-      flex-shrink: 0;
+      margin-bottom: 16px;
     }
 
     .card-wrapper {
@@ -78,7 +56,7 @@
       z-index: 5;
       width: 92%;
       max-width: 720px;
-      margin-top: 64px;
+      margin-top: 0;
     }
 
     .card {
@@ -259,10 +237,7 @@
 
   <div class="confetti-container" id="confetti"></div>
 
-  <header class="header">
-    <span class="header-title">🎓 Wiskunde Uitbeelden – Vrijgezellen Klaas</span>
-    <span class="counter" id="counter">1 / 20</span>
-  </header>
+  <span class="counter" id="counter">1 / 20</span>
 
   <div class="card-wrapper" id="cardWrapper">
     <div class="card" id="card">
@@ -283,32 +258,32 @@
 
   <div class="finished" id="finished">
     <h2>🎉 Klaar!</h2>
-    <p>Klaas heeft alle 20 stellingen doorstaan.<br>Nu mag hij trouwen. 💍</p>
+    <p>Klaas heeft alle 20 stellingen doorstaan. 🎓</p>
     <button class="btn-restart" onclick="restart()">↩ Opnieuw beginnen</button>
   </div>
 
   <script>
     const theorems = [
       { title: "Stelling van Pythagoras",              formula: "a² + b² = c²" },
-      { title: "Euler's Identiteit",                   formula: "e^(iπ) + 1 = 0" },
-      { title: "Fermat's Laatste Stelling",            formula: "aⁿ + bⁿ ≠ cⁿ  (n > 2)" },
+      { title: "Identiteit van Euler",                 formula: "e^(iπ) + 1 = 0" },
+      { title: "Grote stelling van Fermat",            formula: "aⁿ + bⁿ ≠ cⁿ  (n > 2)" },
       { title: "Stelling van Bayes",                   formula: "P(A|B) = P(B|A)·P(A) / P(B)" },
-      { title: "Centrale Limietstelling",              formula: "Som van n metingen → Normaalverdeling" },
-      { title: "Vier-Kleurenstelling",                 formula: "χ(G) ≤ 4 voor vlakke grafen" },
-      { title: "Hairy Ball Theorem",                   formula: "∄ continu nulpuntvrij vectorveld op S²" },
-      { title: "Ham Sandwich Theorem",                 formula: "∃ vlak dat ham, kaas & brood bisecteert" },
-      { title: "Banach-Tarski Paradox",                formula: "1 bol → 2 identieke bollen" },
-      { title: "Stellingen van Gödel",                 formula: "Elk consistent systeem is onvolledig" },
-      { title: "Fundamentele Stelling van de Calculus",formula: "∫ₐᵇ f(x) dx = F(b) − F(a)" },
-      { title: "Stelling van Euclid",                  formula: "Er zijn oneindig veel priemgetallen" },
-      { title: "Wet van de Grote Aantallen",           formula: "x̄ₙ → μ  als  n → ∞" },
-      { title: "Binomiumstelling van Newton",          formula: "(a + b)ⁿ = Σ C(n,k) aᵏ bⁿ⁻ᵏ" },
+      { title: "Centrale limietstelling",              formula: "Som van n metingen → Normaalverdeling" },
+      { title: "Vierkleurenstelling",                  formula: "χ(G) ≤ 4 voor vlakke grafen" },
+      { title: "Behaarde-bolstelling",                 formula: "∄ continu nulpuntvrij vectorveld op S²" },
+      { title: "Hamboterhamstelling",                  formula: "∃ vlak dat ham, kaas & brood bisecteert" },
+      { title: "Paradox van Banach-Tarski",            formula: "1 bol → 2 identieke bollen" },
+      { title: "Onvolledigheidsstellingen van Gödel",  formula: "Elk consistent systeem is onvolledig" },
+      { title: "Hoofdstelling van de analyse",         formula: "∫ₐᵇ f(x) dx = F(b) − F(a)" },
+      { title: "Stelling van Euclides",                formula: "Er zijn oneindig veel priemgetallen" },
+      { title: "Wet van de grote aantallen",           formula: "x̄ₙ → μ  als  n → ∞" },
+      { title: "Verjaardagsparadox",                   formula: "n = 23 ⟹ P(zelfde verjaardag) > 50%" },
       { title: "Stelling van Cantor",                  formula: "|ℕ| < |ℝ|" },
       { title: "Tussenwaardestelling",                 formula: "f(a) < 0 < f(b) ⟹ ∃c: f(c) = 0" },
       { title: "Stelling van Nash",                    formula: "Elk spel heeft een Nash-evenwicht" },
-      { title: "Het Monty Hall Probleem",              formula: "P(winst bij wisselen) = 2/3" },
-      { title: "Stelling van Rolle",                   formula: "f(a) = f(b) ⟹ ∃c: f′(c) = 0" },
-      { title: "Grondslagenstelling van de Algebra",   formula: "Elk polynoom graad n heeft n wortels (in ℂ)" },
+      { title: "Monty Hall-probleem",                  formula: "P(winst bij wisselen) = 2/3" },
+      { title: "Hotel van Hilbert",                    formula: "∞ kamers vol, toch altijd plek voor meer" },
+      { title: "Hoofdstelling van de algebra",         formula: "Elk polynoom graad n heeft n wortels (in ℂ)" },
     ];
 
     let current = 0;
