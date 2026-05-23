@@ -235,25 +235,33 @@ const puzzles = [
     }
   },
 
-  // ── Tetromino: each region matches a shape ────────────────────────────────
+  // ── Walls: path must not cross broken edges ───────────────────────────────
   {
-    title: "Puzzle 3: Tetromino Match",
-    desc: "Each colored block shows a tetromino shape. Your path must divide the grid so each region exactly fits the tetromino shown inside it.",
-    hint: "The L-shape needs 4 cells, the straight bar needs 4 cells in a row.",
-    gridSize: 4,
-    start: { col: 0, row: 4 },
-    end:   { col: 4, row: 4 },
+    title: "Puzzle 3: Walled Maze",
+    desc: "Red dashed lines are walls — your path cannot cross them. Navigate from the top-left corner to the bottom-right.",
+    hint: "Try going right along the top, then wind back down through the middle.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 3 },
     decorations: [
-      // L-tetromino in top-left region (3 cells wide + 1)
-      { type: 'tetromino', col: 0, row: 0, shape: 'L', color: '#e57373' },
-      // I-tetromino in bottom-right region
-      { type: 'tetromino', col: 2, row: 2, shape: 'I', color: '#64b5f6' },
+      { type: 'brokenedge', nodeA: {col:2,row:0}, nodeB: {col:3,row:0} },
+      { type: 'brokenedge', nodeA: {col:0,row:1}, nodeB: {col:1,row:1} },
+      { type: 'brokenedge', nodeA: {col:2,row:1}, nodeB: {col:3,row:1} },
+      { type: 'brokenedge', nodeA: {col:1,row:2}, nodeB: {col:2,row:2} },
+      { type: 'brokenedge', nodeA: {col:0,row:3}, nodeB: {col:1,row:3} },
     ],
     validate(path) {
-      return validateTetromino(path, 4, [
-        { col: 0, row: 0, shape: 'L', cells: 4 },
-        { col: 2, row: 2, shape: 'I', cells: 4 },
-      ]);
+      const forbidden = [
+        [{col:2,row:0},{col:3,row:0}],
+        [{col:0,row:1},{col:1,row:1}],
+        [{col:2,row:1},{col:3,row:1}],
+        [{col:1,row:2},{col:2,row:2}],
+        [{col:0,row:3},{col:1,row:3}],
+      ];
+      for (const [a,b] of forbidden) {
+        if (pathCrossesEdge(path, a, b)) return { ok: false, msg: "Path crosses a wall." };
+      }
+      return { ok: true };
     }
   },
 
