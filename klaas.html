@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Witness Puzzles</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e;
+    color: #eee;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 { font-size: 2rem; margin-bottom: 8px; color: #f0c040; letter-spacing: 2px; }
+  #subtitle { color: #aaa; margin-bottom: 24px; font-size: 0.95rem; }
+  #progress-bar-wrap {
+    width: 100%;
+    max-width: 600px;
+    background: #333;
+    border-radius: 8px;
+    height: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  #progress-bar { height: 10px; background: #f0c040; border-radius: 8px; transition: width 0.4s; width: 0%; }
+  #puzzle-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 600px;
+  }
+  #puzzle-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #f0c040;
+    letter-spacing: 1px;
+  }
+  #puzzle-desc {
+    color: #bbb;
+    font-size: 0.9rem;
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+  canvas {
+    border: 3px solid #444;
+    border-radius: 12px;
+    background: #16213e;
+    cursor: crosshair;
+    touch-action: none;
+    display: block;
+  }
+  canvas.success { border-color: #4caf50; box-shadow: 0 0 16px #4caf5088; }
+  canvas.error { border-color: #e53935; box-shadow: 0 0 16px #e5393588; }
+  #status {
+    font-size: 1rem;
+    min-height: 24px;
+    color: #aaa;
+    letter-spacing: 0.5px;
+  }
+  #status.ok { color: #4caf50; }
+  #status.err { color: #e53935; }
+  #nav {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  button {
+    background: #2a2a4a;
+    color: #f0c040;
+    border: 2px solid #f0c040;
+    border-radius: 8px;
+    padding: 8px 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #3a3a6a; }
+  button:disabled { opacity: 0.3; cursor: default; }
+  #puzzle-counter { color: #888; font-size: 0.85rem; }
+  #completion {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px;
+    text-align: center;
+  }
+  #completion h2 { color: #f0c040; font-size: 2rem; }
+  #completion p { color: #bbb; font-size: 1.1rem; }
+  #hint-btn {
+    background: transparent;
+    border: 1px solid #666;
+    color: #888;
+    font-size: 0.8rem;
+    padding: 4px 14px;
+    border-radius: 6px;
+  }
+  #hint-text {
+    color: #f0c04088;
+    font-size: 0.85rem;
+    min-height: 18px;
+    text-align: center;
+    max-width: 440px;
+  }
+</style>
+</head>
+<body>
+<h1>Witness Puzzles</h1>
+<p id="subtitle">Draw a path from start (circle) to end (gap) — solving each puzzle's rule.</p>
+<div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+<div id="puzzle-area">
+  <div id="puzzle-counter"></div>
+  <div id="puzzle-title"></div>
+  <div id="puzzle-desc"></div>
+  <canvas id="canvas" width="420" height="420"></canvas>
+  <div id="status"></div>
+  <div id="hint-text"></div>
+  <div id="nav">
+    <button id="hint-btn">Hint</button>
+    <button id="reset-btn">Reset</button>
+    <button id="next-btn" disabled>Next</button>
+  </div>
+</div>
+<div id="completion">
+  <h2>Puzzles Complete!</h2>
+  <p>You've solved all the witness puzzles.<br>Total time well spent.</p>
+  <button onclick="location.reload()">Play Again</button>
+</div>
+
+<script>
+// ─── Puzzle Engine ────────────────────────────────────────────────────────────
+
+const CELL = 80;    // pixels per grid cell
+const PAD  = 30;    // canvas padding
+const DOT  = 12;    // endpoint circle radius
+const LINE = 8;     // path stroke width
+
+// Grid coords: (col, row) where (0,0) is top-left node
+// A puzzle grid of size N has (N+1)x(N+1) nodes
+
+function nodePos(col, row, gridSize) {
+  const total = gridSize * CELL;
+  const offsetX = (420 - total) / 2;
+  const offsetY = (420 - total) / 2;
+  return { x: offsetX + col * CELL, y: offsetY + row * CELL };
+}
+
+function snapNode(px, py, gridSize) {
+  const total = gridSize * CELL;
+  const offsetX = (420 - total) / 2;
+  const offsetY = (420 - total) / 2;
+  const col = Math.round((px - offsetX) / CELL);
+  const row = Math.round((py - offsetY) / CELL);
+  if (col < 0 || col > gridSize || row < 0 || row > gridSize) return null;
+  return { col, row };
+}
+
+// ─── Puzzle Definitions ───────────────────────────────────────────────────────
+// Each puzzle: { title, desc, hint, gridSize, start, end, validate(path) }
+
+const puzzles = [
+
+  // ── Tutorial: straight line ──────────────────────────────────────────────
+  {
+    title: "Tutorial: Connect the Dots",
+    desc: "Draw a path from the filled circle to the open gap. No rules yet — just explore the controls.",
+    hint: "Click and drag from the yellow circle on the left to the gap on the right.",
+    gridSize: 2,
+    start: { col: 0, row: 1 },
+    end:   { col: 2, row: 1 },
+    decorations: [],
+    validate(path) {
+      // Any path from start to end is valid
+      return { ok: true };
+    }
+  },
+
+  // ── Black/White squares: separate them ──────────────────────────────────
+  {
+    title: "Puzzle 1: Divide & Conquer",
+    desc: "Your path must separate the black squares from the white squares. Each region enclosed by the path may contain only one color.",
+    hint: "Draw the path straight down the middle column.",
+    gridSize: 2,
+    start: { col: 0, row: 0 },
+    end:   { col: 0, row: 2 },
+    decorations: [
+      { type: 'square', col: 0, row: 0, color: '#222' },
+      { type: 'square', col: 1, row: 0, color: '#eee' },
+      { type: 'square', col: 0, row: 1, color: '#222' },
+      { type: 'square', col: 1, row: 1, color: '#eee' },
+    ],
+    validate(path) {
+      // Path must separate black (col 0) from white (col 1)
+      // Valid if path goes through nodes (0,0)→(1,0)→(1,1)→(1,2) OR (0,0)→(1,0)→(2,0)→(2,1)→(2,2)→(1,2)→(0,2) etc
+      // Simplified: check if vertical segment col=1 is traversed at least once
+      // Full region check:
+      return validateRegionSeparation(path, 2, [
+        { col: 0, row: 0, color: 'black' },
+        { col: 1, row: 0, color: 'white' },
+        { col: 0, row: 1, color: 'black' },
+        { col: 1, row: 1, color: 'white' },
+      ]);
+    }
+  },
+
+  // ── Stars: pair them in same region ──────────────────────────────────────
+  {
+    title: "Puzzle 2: Seeing Stars",
+    desc: "Each region must contain exactly 2 stars. Stars of the same color must share a region, and each region must have exactly a pair.",
+    hint: "The two yellow stars need to be together, and the two blue stars together.",
+    gridSize: 3,
+    start: { col: 0, row: 3 },
+    end:   { col: 3, row: 3 },
+    decorations: [
+      { type: 'star', col: 0, row: 0, color: '#f0c040' },
+      { type: 'star', col: 1, row: 0, color: '#f0c040' },
+      { type: 'star', col: 2, row: 2, color: '#5599ff' },
+      { type: 'star', col: 1, row: 2, color: '#5599ff' },
+    ],
+    validate(path) {
+      return validateStars(path, 3, [
+        { col: 0, row: 0, color: 'yellow' },
+        { col: 1, row: 0, color: 'yellow' },
+        { col: 2, row: 2, color: 'blue' },
+        { col: 1, row: 2, color: 'blue' },
+      ]);
+    }
+  },
+
+  // ── Walls: path must not cross broken edges ───────────────────────────────
+  {
+    title: "Puzzle 3: Walled Maze",
+    desc: "Red dashed lines are walls — your path cannot cross them. Navigate from the top-left corner to the bottom-right.",
+    hint: "Try going right along the top, then wind back down through the middle.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 3 },
+    decorations: [
+      { type: 'brokenedge', nodeA: {col:2,row:0}, nodeB: {col:3,row:0} },
+      { type: 'brokenedge', nodeA: {col:0,row:1}, nodeB: {col:1,row:1} },
+      { type: 'brokenedge', nodeA: {col:2,row:1}, nodeB: {col:3,row:1} },
+      { type: 'brokenedge', nodeA: {col:1,row:2}, nodeB: {col:2,row:2} },
+      { type: 'brokenedge', nodeA: {col:0,row:3}, nodeB: {col:1,row:3} },
+    ],
+    validate(path) {
+      const forbidden = [
+        [{col:2,row:0},{col:3,row:0}],
+        [{col:0,row:1},{col:1,row:1}],
+        [{col:2,row:1},{col:3,row:1}],
+        [{col:1,row:2},{col:2,row:2}],
+        [{col:0,row:3},{col:1,row:3}],
+      ];
+      for (const [a,b] of forbidden) {
+        if (pathCrossesEdge(path, a, b)) return { ok: false, msg: "Path crosses a wall." };
+      }
+      return { ok: true };
+    }
+  },
+
+  // ── Triangle constraint: count path edges touching cell ───────────────────
+  {
+    title: "Puzzle 4: Triangle Clues",
+    desc: "Triangles tell you exactly how many of their 4 edges are crossed by your path. A 1-triangle means the path touches exactly 1 side of that cell.",
+    hint: "Count how many sides of each triangle cell the path must cross. Work from the corners.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 3 },
+    decorations: [
+      { type: 'triangle', col: 0, row: 0, count: 2 },
+      { type: 'triangle', col: 2, row: 0, count: 1 },
+      { type: 'triangle', col: 0, row: 2, count: 1 },
+      { type: 'triangle', col: 2, row: 2, count: 2 },
+    ],
+    validate(path) {
+      return validateTriangles(path, 3, [
+        { col: 0, row: 0, count: 2 },
+        { col: 2, row: 0, count: 1 },
+        { col: 0, row: 2, count: 1 },
+        { col: 2, row: 2, count: 2 },
+      ]);
+    }
+  },
+
+  // ── Dots on edges must be crossed ────────────────────────────────────────
+  {
+    title: "Puzzle 5: Dot the Line",
+    desc: "Your path must cross every dot placed on the grid edges. Black dots on edges are checkpoints — your path must pass through all of them.",
+    hint: "Find each dot on an edge and make sure your path crosses it.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 3 },
+    decorations: [
+      { type: 'edgedot', nodeA: {col:1,row:0}, nodeB: {col:2,row:0} },
+      { type: 'edgedot', nodeA: {col:0,row:1}, nodeB: {col:0,row:2} },
+      { type: 'edgedot', nodeA: {col:2,row:2}, nodeB: {col:3,row:2} },
+      { type: 'edgedot', nodeA: {col:1,row:3}, nodeB: {col:2,row:3} },
+    ],
+    validate(path) {
+      const required = [
+        [{col:1,row:0},{col:2,row:0}],
+        [{col:0,row:1},{col:0,row:2}],
+        [{col:2,row:2},{col:3,row:2}],
+        [{col:1,row:3},{col:2,row:3}],
+      ];
+      for (const [a,b] of required) {
+        if (!pathCrossesEdge(path, a, b)) return { ok: false, msg: "Path misses a dot checkpoint." };
+      }
+      return { ok: true };
+    }
+  },
+
+  // ── Broken edges: path must NOT cross ────────────────────────────────────
+  {
+    title: "Puzzle 6: Broken Bridges",
+    desc: "Dashed lines on edges are walls — your path must NOT cross them. Route around every broken edge.",
+    hint: "Treat the dashed segments as walls and route around them.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 3 },
+    decorations: [
+      { type: 'brokenedge', nodeA: {col:1,row:0}, nodeB: {col:2,row:0} },
+      { type: 'brokenedge', nodeA: {col:0,row:2}, nodeB: {col:0,row:3} },
+      { type: 'brokenedge', nodeA: {col:2,row:1}, nodeB: {col:3,row:1} },
+      { type: 'brokenedge', nodeA: {col:1,row:2}, nodeB: {col:2,row:2} },
+    ],
+    validate(path) {
+      const forbidden = [
+        [{col:1,row:0},{col:2,row:0}],
+        [{col:0,row:2},{col:0,row:3}],
+        [{col:2,row:1},{col:3,row:1}],
+        [{col:1,row:2},{col:2,row:2}],
+      ];
+      for (const [a,b] of forbidden) {
+        if (pathCrossesEdge(path, a, b)) return { ok: false, msg: "Path crosses a broken bridge." };
+      }
+      return { ok: true };
+    }
+  },
+
+  // ── Combined: B&W + edge dots ─────────────────────────────────────────────
+  {
+    title: "Puzzle 7: Multi-Rule I",
+    desc: "Separate black from white AND cross all the dot checkpoints. Both rules apply at once.",
+    hint: "First trace the required dots, then check that your path separates the colors.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 0 },
+    decorations: [
+      { type: 'square', col: 0, row: 0, color: '#222' },
+      { type: 'square', col: 2, row: 0, color: '#222' },
+      { type: 'square', col: 0, row: 2, color: '#eee' },
+      { type: 'square', col: 2, row: 2, color: '#eee' },
+      { type: 'square', col: 1, row: 1, color: '#222' },
+      { type: 'edgedot', nodeA: {col:1,row:1}, nodeB: {col:2,row:1} },
+      { type: 'edgedot', nodeA: {col:1,row:2}, nodeB: {col:1,row:3} },
+    ],
+    validate(path) {
+      const edgeCheck = [
+        [{col:1,row:1},{col:2,row:1}],
+        [{col:1,row:2},{col:1,row:3}],
+      ];
+      for (const [a,b] of edgeCheck) {
+        if (!pathCrossesEdge(path, a, b)) return { ok: false, msg: "Missing a dot checkpoint." };
+      }
+      return validateRegionSeparation(path, 3, [
+        { col: 0, row: 0, color: 'black' },
+        { col: 2, row: 0, color: 'black' },
+        { col: 0, row: 2, color: 'white' },
+        { col: 2, row: 2, color: 'white' },
+        { col: 1, row: 1, color: 'black' },
+      ]);
+    }
+  },
+
+  // ── Symmetry: path must be symmetric under 180° rotation ─────────────────
+  {
+    title: "Puzzle 8: Mirror Path",
+    desc: "Draw a path that is symmetric: for every segment you draw, there must be a matching segment at the point-reflected position (180° rotation around center).",
+    hint: "If you go right at the top, you must go left at the mirrored bottom position.",
+    gridSize: 4,
+    start: { col: 0, row: 0 },
+    end:   { col: 4, row: 4 },
+    decorations: [
+      { type: 'symmetry_marker' },
+    ],
+    validate(path) {
+      return validateSymmetry(path, 4);
+    }
+  },
+
+  // ── Stars + triangles ─────────────────────────────────────────────────────
+  {
+    title: "Puzzle 9: Multi-Rule II",
+    desc: "Stars must be paired (2 per region, same color). Triangle counts must also be satisfied simultaneously.",
+    hint: "Stars constrain region shapes; triangles constrain edge crossings. Satisfy both.",
+    gridSize: 3,
+    start: { col: 0, row: 0 },
+    end:   { col: 3, row: 3 },
+    decorations: [
+      { type: 'star', col: 0, row: 0, color: '#e57373' },
+      { type: 'star', col: 2, row: 0, color: '#e57373' },
+      { type: 'star', col: 0, row: 2, color: '#64b5f6' },
+      { type: 'star', col: 2, row: 2, color: '#64b5f6' },
+      { type: 'triangle', col: 1, row: 1, count: 2 },
+    ],
+    validate(path) {
+      const triResult = validateTriangles(path, 3, [{ col: 1, row: 1, count: 2 }]);
+      if (!triResult.ok) return triResult;
+      return validateStars(path, 3, [
+        { col: 0, row: 0, color: 'red' },
+        { col: 2, row: 0, color: 'red' },
+        { col: 0, row: 2, color: 'blue' },
+        { col: 2, row: 2, color: 'blue' },
+      ]);
+    }
+  },
+
+  // ── Grand Finale: all rules ───────────────────────────────────────────────
+  {
+    title: "Puzzle 10: The Grand Finale",
+    desc: "The final puzzle combines dot checkpoints, broken bridges, and black/white separation. All three rules must be satisfied.",
+    hint: "Start by routing through the required dots, then avoid the broken edges, then verify the color separation.",
+    gridSize: 4,
+    start: { col: 0, row: 2 },
+    end:   { col: 4, row: 2 },
+    decorations: [
+      { type: 'square', col: 0, row: 0, color: '#222' },
+      { type: 'square', col: 1, row: 0, color: '#222' },
+      { type: 'square', col: 0, row: 1, color: '#222' },
+      { type: 'square', col: 1, row: 3, color: '#eee' },
+      { type: 'square', col: 2, row: 3, color: '#eee' },
+      { type: 'square', col: 3, row: 3, color: '#eee' },
+      { type: 'square', col: 2, row: 0, color: '#eee' },
+      { type: 'square', col: 3, row: 0, color: '#eee' },
+      { type: 'edgedot', nodeA: {col:2,row:1}, nodeB: {col:2,row:2} },
+      { type: 'edgedot', nodeA: {col:1,row:2}, nodeB: {col:2,row:2} },
+      { type: 'brokenedge', nodeA: {col:0,row:2}, nodeB: {col:1,row:2} },
+      { type: 'brokenedge', nodeA: {col:3,row:1}, nodeB: {col:3,row:2} },
+    ],
+    validate(path) {
+      const required = [
+        [{col:2,row:1},{col:2,row:2}],
+        [{col:1,row:2},{col:2,row:2}],
+      ];
+      for (const [a,b] of required) {
+        if (!pathCrossesEdge(path, a, b)) return { ok: false, msg: "Missing a dot checkpoint." };
+      }
+      const forbidden = [
+        [{col:0,row:2},{col:1,row:2}],
+        [{col:3,row:1},{col:3,row:2}],
+      ];
+      for (const [a,b] of forbidden) {
+        if (pathCrossesEdge(path, a, b)) return { ok: false, msg: "Path crosses a broken bridge." };
+      }
+      return validateRegionSeparation(path, 4, [
+        { col: 0, row: 0, color: 'black' },
+        { col: 1, row: 0, color: 'black' },
+        { col: 0, row: 1, color: 'black' },
+        { col: 1, row: 3, color: 'white' },
+        { col: 2, row: 3, color: 'white' },
+        { col: 3, row: 3, color: 'white' },
+        { col: 2, row: 0, color: 'white' },
+        { col: 3, row: 0, color: 'white' },
+      ]);
+    }
+  },
+];
+
+// ─── Validation Helpers ───────────────────────────────────────────────────────
+
+function pathCrossesEdge(path, a, b) {
+  for (let i = 0; i < path.length - 1; i++) {
+    const p = path[i], q = path[i+1];
+    if ((p.col===a.col && p.row===a.row && q.col===b.col && q.row===b.row) ||
+        (p.col===b.col && p.row===b.row && q.col===a.col && q.row===a.row)) return true;
+  }
+  return false;
+}
+
+function getPathEdgeSet(path) {
+  const edges = new Set();
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i+1];
+    const key = [a.col,a.row,b.col,b.row].sort((x,y)=>x-y).join(',');
+    edges.add(`${Math.min(a.col,b.col)},${Math.min(a.row,b.row)},${Math.max(a.col,b.col)},${Math.max(a.row,b.row)}`);
+  }
+  return edges;
+}
+
+// Flood-fill to get regions on a gridSize x gridSize cell grid, blocked by path edges
+function getRegions(path, gridSize) {
+  const edgeSet = getPathEdgeSet(path);
+  function edgeBlocked(c1r1, c2r2) {
+    // c1r1 and c2r2 are adjacent cells sharing an edge
+    // The shared edge = the two nodes on that edge
+    // cells share edge between (col,row)-(col+1,row) horizontally: shared node-edge is (col+1,row)-(col+1,row+1)
+    // cells share edge (col,row)-(col,row+1) vertically: shared node-edge is (col,row+1)-(col+1,row+1)
+    const [c1,r1] = c1r1, [c2,r2] = c2r2;
+    let na, nb;
+    if (c1===c2) {
+      // vertical adjacency: r2 = r1+1
+      const r = Math.max(r1,r2);
+      na = {col: c1, row: r};
+      nb = {col: c1+1, row: r};
+    } else {
+      // horizontal adjacency: c2 = c1+1
+      const c = Math.max(c1,c2);
+      na = {col: c, row: r1};
+      nb = {col: c, row: r1+1};
+    }
+    const key = `${Math.min(na.col,nb.col)},${Math.min(na.row,nb.row)},${Math.max(na.col,nb.col)},${Math.max(na.row,nb.row)}`;
+    return edgeSet.has(key);
+  }
+
+  const visited = Array.from({length:gridSize}, ()=>new Array(gridSize).fill(-1));
+  let regionId = 0;
+  const regions = [];
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (visited[r][c] === -1) {
+        const cells = [];
+        const queue = [[c,r]];
+        visited[r][c] = regionId;
+        while (queue.length) {
+          const [cc,cr] = queue.shift();
+          cells.push([cc,cr]);
+          const neighbors = [[cc-1,cr],[cc+1,cr],[cc,cr-1],[cc,cr+1]];
+          for (const [nc,nr] of neighbors) {
+            if (nc<0||nc>=gridSize||nr<0||nr>=gridSize) continue;
+            if (visited[nr][nc] !== -1) continue;
+            if (edgeBlocked([cc,cr],[nc,nr])) continue;
+            visited[nr][nc] = regionId;
+            queue.push([nc,nr]);
+          }
+        }
+        regions.push(cells);
+        regionId++;
+      }
+    }
+  }
+  return { regions, visited };
+}
+
+function validateRegionSeparation(path, gridSize, squares) {
+  const { regions, visited } = getRegions(path, gridSize);
+  // Each region must not contain both black and white
+  for (const region of regions) {
+    const colors = new Set();
+    for (const [c,r] of region) {
+      const sq = squares.find(s => s.col===c && s.row===r);
+      if (sq) colors.add(sq.color);
+    }
+    if (colors.has('black') && colors.has('white')) {
+      return { ok: false, msg: "Black and white squares share a region." };
+    }
+  }
+  return { ok: true };
+}
+
+function validateStars(path, gridSize, stars) {
+  const { regions, visited } = getRegions(path, gridSize);
+  for (const region of regions) {
+    const regionStars = [];
+    for (const [c,r] of region) {
+      const s = stars.find(st => st.col===c && st.row===r);
+      if (s) regionStars.push(s);
+    }
+    if (regionStars.length === 0) continue;
+    if (regionStars.length !== 2) return { ok: false, msg: `A region has ${regionStars.length} star(s); needs exactly 2.` };
+    if (regionStars[0].color !== regionStars[1].color) return { ok: false, msg: "A region has stars of different colors." };
+  }
+  return { ok: true };
+}
+
+function validateTriangles(path, gridSize, triangles) {
+  const edgeSet = getPathEdgeSet(path);
+  for (const tri of triangles) {
+    // Count path edges on the 4 sides of cell (tri.col, tri.row)
+    const { col: c, row: r } = tri;
+    const sides = [
+      [c, r, c+1, r],     // top
+      [c, r+1, c+1, r+1], // bottom
+      [c, r, c, r+1],     // left
+      [c+1, r, c+1, r+1], // right
+    ];
+    let count = 0;
+    for (const [c1,r1,c2,r2] of sides) {
+      const key = `${Math.min(c1,c2)},${Math.min(r1,r2)},${Math.max(c1,c2)},${Math.max(r1,r2)}`;
+      if (edgeSet.has(key)) count++;
+    }
+    if (count !== tri.count) return { ok: false, msg: `Triangle at (${c},${r}) needs ${tri.count} edge(s) crossed, got ${count}.` };
+  }
+  return { ok: true };
+}
+
+function validateSymmetry(path, gridSize) {
+  // 180° rotational symmetry: node (c,r) maps to (gridSize-c, gridSize-r)
+  if (path.length < 2) return { ok: false, msg: "Path too short." };
+  const edgeSet = getPathEdgeSet(path);
+  for (const edge of edgeSet) {
+    const [c1,r1,c2,r2] = edge.split(',').map(Number);
+    // mirror
+    const mc1 = gridSize - c2, mr1 = gridSize - r2;
+    const mc2 = gridSize - c1, mr2 = gridSize - r1;
+    const mkey = `${Math.min(mc1,mc2)},${Math.min(mr1,mr2)},${Math.max(mc1,mc2)},${Math.max(mr1,mr2)}`;
+    if (!edgeSet.has(mkey)) return { ok: false, msg: "Path is not symmetric under 180° rotation." };
+  }
+  return { ok: true };
+}
+
+// ─── Renderer ─────────────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let currentPuzzle = 0;
+let path = [];
+let drawing = false;
+let solved = false;
+let hintShown = false;
+
+function getP() { return puzzles[currentPuzzle]; }
+
+function drawGrid() {
+  const p = getP();
+  const gs = p.gridSize;
+  ctx.clearRect(0, 0, 420, 420);
+
+  // Draw grid lines (faint)
+  ctx.strokeStyle = '#2a3a5a';
+  ctx.lineWidth = 1;
+  for (let c = 0; c <= gs; c++) {
+    for (let r = 0; r <= gs; r++) {
+      if (c < gs) {
+        const a = nodePos(c, r, gs), b = nodePos(c+1, r, gs);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      if (r < gs) {
+        const a = nodePos(c, r, gs), b = nodePos(c, r+1, gs);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+    }
+  }
+
+  // Draw decorations
+  for (const d of p.decorations) {
+    if (d.type === 'square') {
+      const pos = nodePos(d.col, d.row, gs);
+      const size = CELL * 0.55;
+      ctx.fillStyle = d.color;
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(pos.x + CELL/2 - size/2, pos.y + CELL/2 - size/2, size, size);
+      ctx.globalAlpha = 1;
+    } else if (d.type === 'star') {
+      const pos = nodePos(d.col, d.row, gs);
+      drawStar(pos.x + CELL/2, pos.y + CELL/2, 14, d.color);
+    } else if (d.type === 'triangle') {
+      const pos = nodePos(d.col, d.row, gs);
+      drawTriangle(pos.x + CELL/2, pos.y + CELL/2, d.count);
+    } else if (d.type === 'edgedot') {
+      const a = nodePos(d.nodeA.col, d.nodeA.row, gs);
+      const b = nodePos(d.nodeB.col, d.nodeB.row, gs);
+      ctx.beginPath();
+      ctx.arc((a.x+b.x)/2, (a.y+b.y)/2, 6, 0, Math.PI*2);
+      ctx.fillStyle = '#f0c040';
+      ctx.fill();
+    } else if (d.type === 'brokenedge') {
+      const a = nodePos(d.nodeA.col, d.nodeA.row, gs);
+      const b = nodePos(d.nodeB.col, d.nodeB.row, gs);
+      ctx.save();
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = '#e53935';
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      ctx.restore();
+    } else if (d.type === 'tetromino') {
+      const pos = nodePos(d.col, d.row, gs);
+      drawTetromino(pos.x + CELL/2, pos.y + CELL/2, d.shape, d.color);
+    } else if (d.type === 'symmetry_marker') {
+      const cx = 210, cy = 210;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI*2);
+      ctx.strokeStyle = '#f0c04066';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx-14, cy); ctx.lineTo(cx+14, cy);
+      ctx.moveTo(cx, cy-14); ctx.lineTo(cx, cy+14);
+      ctx.strokeStyle = '#f0c04044';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // Draw current path
+  if (path.length >= 2) {
+    ctx.strokeStyle = '#f0c040';
+    ctx.lineWidth = LINE;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    const first = nodePos(path[0].col, path[0].row, gs);
+    ctx.moveTo(first.x, first.y);
+    for (let i = 1; i < path.length; i++) {
+      const np = nodePos(path[i].col, path[i].row, gs);
+      ctx.lineTo(np.x, np.y);
+    }
+    ctx.stroke();
+  }
+
+  // Draw start circle
+  const start = nodePos(p.start.col, p.start.row, gs);
+  ctx.beginPath();
+  ctx.arc(start.x, start.y, DOT, 0, Math.PI*2);
+  ctx.fillStyle = '#f0c040';
+  ctx.fill();
+
+  // Draw end gap (open circle)
+  const end = nodePos(p.end.col, p.end.row, gs);
+  // Find which outer direction to extend the exit
+  const exitDir = getExitDirection(p.end, gs);
+  ctx.beginPath();
+  ctx.arc(end.x + exitDir.dx*DOT*0.8, end.y + exitDir.dy*DOT*0.8, DOT*0.85, 0, Math.PI*2);
+  ctx.strokeStyle = '#f0c040';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  // Erase the inner line so it looks like a gap
+  ctx.beginPath();
+  ctx.arc(end.x + exitDir.dx*DOT*0.8, end.y + exitDir.dy*DOT*0.8, DOT*0.85 - 2, 0, Math.PI*2);
+  ctx.fillStyle = '#16213e';
+  ctx.fill();
+}
+
+function getExitDirection(node, gs) {
+  if (node.col === 0)  return { dx: -1, dy: 0 };
+  if (node.col === gs) return { dx:  1, dy: 0 };
+  if (node.row === 0)  return { dx:  0, dy: -1 };
+  if (node.row === gs) return { dx:  0, dy:  1 };
+  return { dx: 1, dy: 0 };
+}
+
+function drawStar(cx, cy, r, color) {
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * 4 * Math.PI / 5) - Math.PI/2;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawTriangle(cx, cy, count) {
+  const colors = ['#aaa', '#f0c040', '#e57373', '#64b5f6'];
+  const s = 10;
+  for (let i = 0; i < count; i++) {
+    const ox = (i - (count-1)/2) * 16;
+    ctx.beginPath();
+    ctx.moveTo(cx+ox, cy - s);
+    ctx.lineTo(cx+ox + s, cy + s*0.7);
+    ctx.lineTo(cx+ox - s, cy + s*0.7);
+    ctx.closePath();
+    ctx.fillStyle = '#f0c040';
+    ctx.fill();
+  }
+}
+
+function drawTetromino(cx, cy, shape, color) {
+  const shapes = {
+    L: [[0,0],[1,0],[0,1],[0,2]],
+    I: [[0,0],[0,1],[0,2],[0,3]],
+    T: [[0,0],[1,0],[2,0],[1,1]],
+    S: [[1,0],[2,0],[0,1],[1,1]],
+  };
+  const cells = shapes[shape] || shapes.L;
+  const unit = 10;
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.8;
+  for (const [c,r] of cells) {
+    ctx.fillRect(cx + c*unit - unit, cy + r*unit - unit*1.5, unit-1, unit-1);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ─── Interaction ──────────────────────────────────────────────────────────────
+
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top)  * scaleY
+  };
+}
+
+function nearStart(pos) {
+  const p = getP();
+  const s = nodePos(p.start.col, p.start.row, p.gridSize);
+  return Math.hypot(pos.x - s.x, pos.y - s.y) < DOT + 8;
+}
+
+function nearEnd(pos) {
+  const p = getP();
+  const e = nodePos(p.end.col, p.end.row, p.gridSize);
+  const dir = getExitDirection(p.end, p.gridSize);
+  const ex = e.x + dir.dx * DOT * 0.8;
+  const ey = e.y + dir.dy * DOT * 0.8;
+  return Math.hypot(pos.x - ex, pos.y - ey) < DOT + 12;
+}
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', continueDraw);
+canvas.addEventListener('mouseup', endDraw);
+canvas.addEventListener('mouseleave', endDraw);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e); }, { passive: false });
+canvas.addEventListener('touchmove',  e => { e.preventDefault(); continueDraw(e); }, { passive: false });
+canvas.addEventListener('touchend',   e => { e.preventDefault(); endDraw(e); }, { passive: false });
+
+function startDraw(e) {
+  if (solved) return;
+  const pos = getCanvasPos(e);
+  if (!nearStart(pos)) return;
+  drawing = true;
+  path = [{ ...getP().start }];
+  setStatus('');
+  canvas.classList.remove('success','error');
+  drawGrid();
+}
+
+function continueDraw(e) {
+  if (!drawing) return;
+  const pos = getCanvasPos(e);
+  const p = getP();
+  const last = path[path.length - 1];
+  const lastPos = nodePos(last.col, last.row, p.gridSize);
+
+  // Determine cardinal direction from last node toward cursor
+  const dx = pos.x - lastPos.x;
+  const dy = pos.y - lastPos.y;
+  const dist = Math.hypot(dx, dy);
+
+  // Only advance once cursor is at least 40% of a cell away from last node
+  if (dist < CELL * 0.4) return;
+
+  const nextNode = Math.abs(dx) >= Math.abs(dy)
+    ? { col: last.col + (dx > 0 ? 1 : -1), row: last.row }
+    : { col: last.col, row: last.row + (dy > 0 ? 1 : -1) };
+
+  // Bounds check
+  if (nextNode.col < 0 || nextNode.col > p.gridSize || nextNode.row < 0 || nextNode.row > p.gridSize) return;
+
+  // Backtrack — undo last step
+  const prev2 = path.length >= 2 ? path[path.length - 2] : null;
+  if (prev2 && nextNode.col === prev2.col && nextNode.row === prev2.row) {
+    path.pop();
+    drawGrid();
+    return;
+  }
+
+  // Prevent revisiting
+  if (path.some(n => n.col === nextNode.col && n.row === nextNode.row)) return;
+
+  path.push(nextNode);
+  drawGrid();
+
+  if (nextNode.col === p.end.col && nextNode.row === p.end.row) {
+    checkSolution();
+  }
+}
+
+function endDraw(e) {
+  if (!drawing) return;
+  drawing = false;
+  const p = getP();
+  const last = path[path.length - 1];
+  if (last && last.col === p.end.col && last.row === p.end.row) {
+    checkSolution();
+  }
+}
+
+function checkSolution() {
+  drawing = false;
+  const p = getP();
+  const result = p.validate(path);
+  if (result.ok) {
+    solved = true;
+    canvas.classList.add('success');
+    setStatus('Solved! Moving on…', 'ok');
+    document.getElementById('next-btn').disabled = false;
+    updateProgress();
+    setTimeout(() => {
+      if (currentPuzzle + 1 >= puzzles.length) {
+        document.getElementById('puzzle-area').style.display = 'none';
+        document.getElementById('completion').style.display = 'flex';
+      } else {
+        loadPuzzle(currentPuzzle + 1);
+      }
+    }, 1200);
+  } else {
+    canvas.classList.add('error');
+    setStatus(result.msg || 'Not quite — try again.', 'err');
+    setTimeout(() => {
+      canvas.classList.remove('error');
+      resetPath();
+    }, 800);
+  }
+}
+
+function resetPath() {
+  path = [];
+  drawing = false;
+  solved = false;
+  hintShown = false;
+  canvas.classList.remove('success','error');
+  document.getElementById('next-btn').disabled = true;
+  document.getElementById('hint-text').textContent = '';
+  setStatus('');
+  drawGrid();
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = cls || '';
+}
+
+function updateProgress() {
+  const done = puzzles.filter((_,i) => i < currentPuzzle || (i === currentPuzzle && solved)).length;
+  document.getElementById('progress-bar').style.width = (done / puzzles.length * 100) + '%';
+}
+
+function loadPuzzle(idx) {
+  currentPuzzle = idx;
+  solved = false;
+  hintShown = false;
+  path = [];
+  drawing = false;
+  canvas.classList.remove('success','error');
+  document.getElementById('next-btn').disabled = true;
+  document.getElementById('hint-text').textContent = '';
+  const p = puzzles[idx];
+  document.getElementById('puzzle-title').textContent = p.title;
+  document.getElementById('puzzle-desc').textContent = p.desc;
+  document.getElementById('puzzle-counter').textContent = `Puzzle ${idx+1} of ${puzzles.length}`;
+  setStatus('');
+  updateProgress();
+  drawGrid();
+}
+
+document.getElementById('reset-btn').addEventListener('click', resetPath);
+document.getElementById('hint-btn').addEventListener('click', () => {
+  document.getElementById('hint-text').textContent = getP().hint;
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (currentPuzzle + 1 >= puzzles.length) {
+    document.getElementById('puzzle-area').style.display = 'none';
+    document.getElementById('completion').style.display = 'flex';
+  } else {
+    loadPuzzle(currentPuzzle + 1);
+  }
+});
+
+loadPuzzle(0);
+</script>
+</body>
+</html>
