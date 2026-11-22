@@ -6,6 +6,10 @@ android {
     namespace = "io.github.ingdas.metrorush"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = false
+    }
+
     defaultConfig {
         applicationId = "io.github.ingdas.metrorush"
         // Watch Face Format v1 needs Wear OS 4 (API 33) or newer.
@@ -28,7 +32,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // No code in a Watch Face Format APK: R8 strips the generated R classes so the
+            // APK ships without a classes.dex.
+            isMinifyEnabled = true
+            isShrinkResources = false
             signingConfig = signingConfigs.getByName("sideload")
         }
     }
