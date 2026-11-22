@@ -51,7 +51,7 @@ jobs:
           ./gradlew -q --no-daemon :specification:validator:executable-jar
           cd "$GITHUB_WORKSPACE/watchfaces/metro-rush"
           java -jar "$RUNNER_TEMP/watchface/third_party/wff/specification/validator/build/libs/wff-validator.jar" \
-            1 --stop-on-fail app/src/main/res/raw/watchface.xml | tee "$RUNNER_TEMP/wff.log"
+            1 --stop-on-fail app/src/main/res/raw/watchface.xml 2>&1 | tee "$RUNNER_TEMP/wff.log"
           # Some failure paths only log; require the explicit PASSED line.
           grep -q "PASSED" "$RUNNER_TEMP/wff.log"
 
