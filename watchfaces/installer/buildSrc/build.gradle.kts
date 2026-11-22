@@ -16,5 +16,5 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.android.wearable.watchface.validator:validator-push:1.0.0-alpha10")
+    implementation("com.google.android.wearable.watchface.validator:validator-push:1.0.0-alpha09")
 }
