@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Watch Face Installer"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:lineSpacingMultiplier="1.15"
+            android:text="Installs Metro Rush and Hatched Hour on your Galaxy Watch over Wi-Fi.\n\nOn the watch:\n1. Settings › About watch › Software information › tap Software version 5×.\n2. Settings › Developer options › turn on ADB debugging and Wireless debugging (watch and phone on the same Wi-Fi).\n3. Tap Wireless debugging › Pair new device. Enter the IP, port and code it shows below, then tap Pair.\n4. Back on the Wireless debugging screen, enter the port next to the IP address and tap Connect." />
+
+        <TextView style="@style/Label" android:text="1 · Pair (once)" />
+
+        <EditText
+            android:id="@+id/host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Watch IP address, e.g. 192.168.1.42"
+            android:inputType="text"
+            android:digits="0123456789." />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/pairPort"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Pairing port"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/pairCode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Pairing code"
+                android:inputType="number" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/pair"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pair" />
+
+        <TextView style="@style/Label" android:text="2 · Connect" />
+
+        <EditText
+            android:id="@+id/connectPort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Port shown next to the IP on Wireless debugging"
+            android:inputType="number" />
+
+        <Button
+            android:id="@+id/connect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connect" />
+
+        <TextView style="@style/Label" android:text="3 · Install" />
+
+        <Button
+            android:id="@+id/installMetro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Install Metro Rush" />
+
+        <Button
+            android:id="@+id/installHatched"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Install Hatched Hour" />
+
+        <TextView
+            android:id="@+id/log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true"
+            android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>

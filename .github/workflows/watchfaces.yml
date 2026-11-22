@@ -71,6 +71,15 @@ jobs:
             fi
           done
 
+      - name: Build phone installer (bundles the watch face APKs built above)
+        run: |
+          (cd watchfaces/installer && ./gradlew --no-daemon assembleRelease)
+          cp watchfaces/installer/app/build/outputs/apk/release/app-release.apk \
+             watchfaces/installer/apk/watch-face-installer.apk
+          for face in $FACES; do
+            unzip -l watchfaces/installer/apk/watch-face-installer.apk | grep -q "assets/$face.apk"
+          done
+
       - name: Commit APKs to the branch
         if: github.event_name == 'push'
         run: |
