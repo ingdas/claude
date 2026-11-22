@@ -34,7 +34,7 @@ Always-on display switches to a thin, static outline version with few lit pixels
 
 1. **Get the APK.** Download [`apk/metro-rush.apk`](apk/metro-rush.apk). CI rebuilds and
    commits it whenever the watch face changes. It's signed with a fixed sideload key (see
-   `signing/`), so newer versions install over older ones with `adb install -r`.
+   `../signing/`), so newer versions install over older ones with `adb install -r`.
 2. **Enable developer mode on the watch.** Go to *Settings → About watch → Software information*
    and tap **Software version** 5 times.
 3. **Enable wireless debugging.** Go to *Settings → Developer options*, turn on **ADB debugging**,
@@ -80,7 +80,7 @@ tools/render-previews.sh               # README media + watch-picker preview (ne
 - The minute-change "morph" is a 3-second cross-fade to the next minute's map. Watch Face Format
   can't interpolate geometry, so a true slide isn't possible.
 
-CI (`.github/workflows/metro-rush.yml`) checks that the committed XML matches the generator,
+CI (`.github/workflows/watchfaces.yml`) checks that the committed XML matches the generator,
 validates it with Google's official Watch Face Format validator (format version 1), builds
 the APK and, on pushes, commits it to `apk/metro-rush.apk`.
 

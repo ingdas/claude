@@ -23,7 +23,7 @@ android {
         // Sideload-only key, committed on purpose: every build (local or CI) gets the same
         // signature, so a new APK installs over the previous one. Not for Play Store use.
         create("sideload") {
-            storeFile = rootProject.file("signing/sideload.jks")
+            storeFile = rootProject.file("../signing/sideload.jks")
             storePassword = "metro-rush-sideload"
             keyAlias = "sideload"
             keyPassword = "metro-rush-sideload"
