@@ -32,9 +32,9 @@ Always-on display switches to a thin, static outline version with few lit pixels
 
 ## Install on a Galaxy Watch 4 (ADB sideload)
 
-1. **Get the APK.** Open the latest successful run of the *Metro Rush watch face* workflow
-   under the repository's **Actions** tab. Download the `metro-rush-apk` artifact and unzip it.
-   You get `app-release.apk`, signed with a debug key, which is fine for sideloading.
+1. **Get the APK.** Download [`apk/metro-rush.apk`](apk/metro-rush.apk). CI rebuilds and
+   commits it whenever the watch face changes. It's signed with a fixed sideload key (see
+   `signing/`), so newer versions install over older ones with `adb install -r`.
 2. **Enable developer mode on the watch.** Go to *Settings → About watch → Software information*
    and tap **Software version** 5 times.
 3. **Enable wireless debugging.** Go to *Settings → Developer options*, turn on **ADB debugging**,
@@ -45,7 +45,7 @@ Always-on display switches to a thin, static outline version with few lit pixels
    ```sh
    adb pair <ip>:<pairing-port>      # enter the 6-digit pairing code
    adb connect <ip>:<port>           # the port shown on the Wireless debugging screen
-   adb install app-release.apk
+   adb install -r metro-rush.apk
    ```
    No computer? Phone apps such as *Bugjaeger* or *Wear Installer* can do the same pair-and-install.
 5. **Select it.** Long-press the current watch face, swipe to the end, tap **+ Add watch face**,
@@ -81,8 +81,8 @@ tools/render-previews.sh               # README media + watch-picker preview (ne
   can't interpolate geometry, so a true slide isn't possible.
 
 CI (`.github/workflows/metro-rush.yml`) checks that the committed XML matches the generator,
-validates it with Google's official Watch Face Format validator (format version 1) and builds
-the APK.
+validates it with Google's official Watch Face Format validator (format version 1), builds
+the APK and, on pushes, commits it to `apk/metro-rush.apk`.
 
 ## Notes and limits
 

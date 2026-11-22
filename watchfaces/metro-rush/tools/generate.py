@@ -251,7 +251,7 @@ class X:
         self.depth = 0
 
     def open(self, tag, **attrs):
-        self.parts.append(f"<{tag}{fmt(attrs)}>")
+        self.parts.append(f"<{tag}{fmt(attrs, tag)}>")
         self.depth += 1
 
     def close(self, tag):
@@ -261,9 +261,9 @@ class X:
     def leaf(self, tag, text=None, **attrs):
         pad = ""
         if text is None:
-            self.parts.append(f"{pad}<{tag}{fmt(attrs)}/>")
+            self.parts.append(f"{pad}<{tag}{fmt(attrs, tag)}/>")
         else:
-            self.parts.append(f"{pad}<{tag}{fmt(attrs)}>{escape(text)}</{tag}>")
+            self.parts.append(f"{pad}<{tag}{fmt(attrs, tag)}>{escape(text)}</{tag}>")
 
     def raw(self, s):
         self.parts.append(s)
@@ -272,9 +272,17 @@ class X:
         return "\n".join(self.parts) + "\n"
 
 
-def fmt(attrs):
+# In the WFF schema these elements take integer x/y/width/height ("dimensionType");
+# shapes inside a PartDraw take floats.
+INT_GEOMETRY = {"Group", "PartDraw", "PartText", "PartImage", "ComplicationSlot",
+                "BoundingOval", "BoundingBox", "AnalogClock", "DigitalClock"}
+
+
+def fmt(attrs, tag=""):
     out = []
     for k, v in attrs.items():
+        if tag in INT_GEOMETRY and k in ("x", "y", "width", "height") and v is not None:
+            v = int(round(float(v)))
         if v is None:
             continue
         k = k.rstrip("_")

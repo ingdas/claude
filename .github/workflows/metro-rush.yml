@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # to commit the built APK back to the branch on push
 
 env:
   # google/watchface commit that provides the official Watch Face Format validator.
@@ -59,6 +59,20 @@ jobs:
 
       - name: Build APK
         run: ./gradlew --no-daemon assembleRelease
+
+      - name: Commit APK to the branch
+        if: github.event_name == 'push'
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk apk/metro-rush.apk
+          git add apk/metro-rush.apk
+          if git diff --cached --quiet; then
+            echo "APK unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Build metro-rush.apk from ${GITHUB_SHA::7}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - uses: actions/upload-artifact@v4
         with:

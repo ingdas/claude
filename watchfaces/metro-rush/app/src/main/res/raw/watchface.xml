@@ -17025,7 +17025,7 @@
 </Text>
 </PartText>
 </Group>
-<ComplicationSlot slotId="0" name="shortcut_0" x="38.5" y="298" width="44" height="44" supportedTypes="SMALL_IMAGE MONOCHROMATIC_IMAGE EMPTY" isCustomizable="TRUE" displayName="Left station">
+<ComplicationSlot slotId="0" name="shortcut_0" x="38" y="298" width="44" height="44" supportedTypes="SMALL_IMAGE MONOCHROMATIC_IMAGE EMPTY" isCustomizable="TRUE" displayName="Left station">
 <DefaultProviderPolicy defaultSystemProvider="APP_SHORTCUT" defaultSystemProviderType="SMALL_IMAGE"/>
 <BoundingOval x="0" y="0" width="44" height="44"/>
 <Complication type="SMALL_IMAGE">
@@ -17066,7 +17066,7 @@
 </Complication>
 <Variant mode="AMBIENT" target="alpha" value="0"/>
 </ComplicationSlot>
-<ComplicationSlot slotId="1" name="shortcut_1" x="367.5" y="298" width="44" height="44" supportedTypes="SMALL_IMAGE MONOCHROMATIC_IMAGE EMPTY" isCustomizable="TRUE" displayName="Right station">
+<ComplicationSlot slotId="1" name="shortcut_1" x="368" y="298" width="44" height="44" supportedTypes="SMALL_IMAGE MONOCHROMATIC_IMAGE EMPTY" isCustomizable="TRUE" displayName="Right station">
 <DefaultProviderPolicy defaultSystemProvider="APP_SHORTCUT" defaultSystemProviderType="SMALL_IMAGE"/>
 <BoundingOval x="0" y="0" width="44" height="44"/>
 <Complication type="SMALL_IMAGE">

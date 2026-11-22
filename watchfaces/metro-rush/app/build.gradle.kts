@@ -15,11 +15,21 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        // Sideload-only key, committed on purpose: every build (local or CI) gets the same
+        // signature, so a new APK installs over the previous one. Not for Play Store use.
+        create("sideload") {
+            storeFile = rootProject.file("signing/sideload.jks")
+            storePassword = "metro-rush-sideload"
+            keyAlias = "sideload"
+            keyPassword = "metro-rush-sideload"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Sideload-only: sign release builds with the debug key so `adb install` just works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("sideload")
         }
     }
 }
