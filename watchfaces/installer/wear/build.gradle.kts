@@ -1,5 +1,3 @@
-import com.google.android.wearable.watchface.validator.client.DwfValidatorFactory
-
 plugins {
     id("com.android.application")
 }
@@ -61,24 +59,24 @@ dependencies {
 // generated for this marketplace's package name. The tokens are shared with the phone app,
 // which sends each face + token to the watch over Bluetooth.
 val tokenDir = layout.buildDirectory.dir("generated/pushTokens")
-val generatePushTokens by tasks.registering {
-    val apks = faces.keys.map { pushApk(it) }
-    inputs.files(apks)
+// The validator runs in its own JVM (:tokengen), away from the Android Gradle Plugin's classpath.
+val tokengen by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+dependencies { tokengen(project(":tokengen")) }
+
+val generatePushTokens by tasks.registering(JavaExec::class) {
+    val apks = faces.map { (dir, id) -> pushApk(dir) to id }
+    inputs.files(apks.map { it.first })
     outputs.dir(tokenDir)
-    doLast {
-        val validator = DwfValidatorFactory.create()
-        faces.forEach { (dir, id) ->
-            val apk = pushApk(dir)
-            if (!apk.exists()) throw GradleException("Missing $apk: build the $dir push flavor first")
-            val result = validator.validate(apk, marketplacePackage)
-            val failures = result.failures()
-            if (failures.isNotEmpty()) {
-                throw GradleException("$dir failed Watch Face Push validation:\n" +
-                    failures.joinToString("\n") { "  - $it" })
-            }
-            val out = tokenDir.get().file("${id}_token.txt").asFile
-            out.parentFile.mkdirs()
-            out.writeText(result.validationToken())
+    classpath = tokengen
+    mainClass.set("tokengen.Main")
+    args(listOf(marketplacePackage, tokenDir.get().asFile.absolutePath) +
+        apks.map { (apk, id) -> "${apk.absolutePath}=$id" })
+    doFirst {
+        apks.forEach { (apk, _) ->
+            if (!apk.exists()) throw GradleException("Missing $apk: build that face's push flavor first")
         }
     }
 }
