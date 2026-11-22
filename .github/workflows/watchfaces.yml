@@ -61,30 +61,38 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build APKs
+      - name: Build watch face APKs (standalone + Watch Face Push flavors)
         run: |
           for face in $FACES; do
             (cd "watchfaces/$face" && ./gradlew --no-daemon assembleRelease)
-            cp "watchfaces/$face/app/build/outputs/apk/release/app-release.apk" "watchfaces/$face/apk/$face.apk"
-            if unzip -l "watchfaces/$face/apk/$face.apk" | grep -q classes.dex; then
-              echo "::error::$face APK contains code; Watch Face Format APKs must be resource-only"; exit 1
-            fi
+            out="watchfaces/$face/app/build/outputs/apk"
+            cp "$out/standalone/release/app-standalone-release.apk" "watchfaces/$face/apk/$face.apk"
+            cp "$out/push/release/app-push-release.apk" "watchfaces/$face/apk/$face-push.apk"
+            for apk in "watchfaces/$face/apk/$face.apk" "watchfaces/$face/apk/$face-push.apk"; do
+              if unzip -l "$apk" | grep -q classes.dex; then
+                echo "::error::$apk contains code; Watch Face Format APKs must be resource-only"; exit 1
+              fi
+            done
           done
 
-      - name: Build phone installer (bundles the watch face APKs built above)
+      - name: Build watch companion + phone app (validates push faces, bundles everything)
         run: |
           (cd watchfaces/installer && ./gradlew --no-daemon assembleRelease)
           mkdir -p watchfaces/installer/apk
           cp watchfaces/installer/app/build/outputs/apk/release/app-release.apk \
-             watchfaces/installer/apk/watch-face-installer.apk
-          for face in $FACES; do
-            unzip -l watchfaces/installer/apk/watch-face-installer.apk | grep -q "assets/$face.apk"
+             watchfaces/installer/apk/watch-faces-phone.apk
+          cp watchfaces/installer/wear/build/outputs/apk/release/wear-release.apk \
+             watchfaces/installer/apk/watch-faces-companion.apk
+          git rm -q --ignore-unmatch watchfaces/installer/apk/watch-face-installer.apk
+          for asset in watch-companion.apk metrorush.apk metrorush_token.txt hatchedhour.apk hatchedhour_token.txt; do
+            unzip -l watchfaces/installer/apk/watch-faces-phone.apk | grep -q "assets/$asset"
           done
+          unzip -l watchfaces/installer/apk/watch-faces-companion.apk | grep -q "assets/default_watchface.apk"
 
       - name: Commit APKs to the branch
         if: github.event_name == 'push'
         run: |
-          git add watchfaces/*/apk/*.apk
+          git add -A watchfaces/*/apk/
           if git diff --cached --quiet; then
             echo "APKs unchanged"
             exit 0

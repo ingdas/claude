@@ -16,4 +16,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "watch-face-installer"
-include(":app")
+include(":app")  // phone app
+include(":wear") // watch companion (Watch Face Push marketplace)
