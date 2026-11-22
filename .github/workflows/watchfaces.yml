@@ -74,6 +74,7 @@ jobs:
       - name: Build phone installer (bundles the watch face APKs built above)
         run: |
           (cd watchfaces/installer && ./gradlew --no-daemon assembleRelease)
+          mkdir -p watchfaces/installer/apk
           cp watchfaces/installer/app/build/outputs/apk/release/app-release.apk \
              watchfaces/installer/apk/watch-face-installer.apk
           for face in $FACES; do
