@@ -1,0 +1,109 @@
+name: Watch faces
+
+on:
+  push:
+    paths:
+      - "watchfaces/**"
+      - ".github/workflows/watchfaces.yml"
+  pull_request:
+    paths:
+      - "watchfaces/**"
+      - ".github/workflows/watchfaces.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # to commit the built APKs back to the branch on push
+
+env:
+  # google/watchface commit that provides the official Watch Face Format validator.
+  WFF_VALIDATOR_REF: d1cdafa953c95d5554fc54df4bc3948befbefc4d
+  FACES: metro-rush hatched-hour
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generated watchface.xml files are up to date
+        run: |
+          for face in $FACES; do
+            python3 "watchfaces/$face/tools/generate.py"
+          done
+          git diff --exit-code -- 'watchfaces/*/app/src/main/res/raw/watchface.xml'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Build the official Watch Face Format validator
+        run: |
+          git init -q "$RUNNER_TEMP/watchface"
+          cd "$RUNNER_TEMP/watchface"
+          git fetch -q --depth 1 https://github.com/google/watchface.git "$WFF_VALIDATOR_REF"
+          git checkout -q FETCH_HEAD
+          cd third_party/wff
+          ./gradlew -q --no-daemon :specification:validator:executable-jar
+
+      - name: Validate against Watch Face Format v1
+        run: |
+          jar="$RUNNER_TEMP/watchface/third_party/wff/specification/validator/build/libs/wff-validator.jar"
+          for face in $FACES; do
+            java -jar "$jar" 1 --stop-on-fail "watchfaces/$face/app/src/main/res/raw/watchface.xml" 2>&1 | tee "$RUNNER_TEMP/wff-$face.log"
+            # Some failure paths only log; require the explicit PASSED line.
+            grep -q "PASSED" "$RUNNER_TEMP/wff-$face.log"
+          done
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build watch face APKs (standalone + Watch Face Push flavors)
+        run: |
+          for face in $FACES; do
+            (cd "watchfaces/$face" && ./gradlew --no-daemon assembleRelease)
+            out="watchfaces/$face/app/build/outputs/apk"
+            cp "$out/standalone/release/app-standalone-release.apk" "watchfaces/$face/apk/$face.apk"
+            cp "$out/push/release/app-push-release.apk" "watchfaces/$face/apk/$face-push.apk"
+            for apk in "watchfaces/$face/apk/$face.apk" "watchfaces/$face/apk/$face-push.apk"; do
+              if unzip -l "$apk" | grep -q classes.dex; then
+                echo "::error::$apk contains code; Watch Face Format APKs must be resource-only"; exit 1
+              fi
+            done
+          done
+
+      - name: Build watch companion + phone app (validates push faces, bundles everything)
+        run: |
+          (cd watchfaces/installer && ./gradlew --no-daemon assembleRelease)
+          mkdir -p watchfaces/installer/apk
+          cp watchfaces/installer/app/build/outputs/apk/release/app-release.apk \
+             watchfaces/installer/apk/watch-faces-phone.apk
+          cp watchfaces/installer/wear/build/outputs/apk/release/wear-release.apk \
+             watchfaces/installer/apk/watch-faces-companion.apk
+          git rm -q --ignore-unmatch watchfaces/installer/apk/watch-face-installer.apk
+          for asset in watch-companion.apk metrorush.apk metrorush_token.txt hatchedhour.apk hatchedhour_token.txt; do
+            unzip -l watchfaces/installer/apk/watch-faces-phone.apk | grep -q "assets/$asset"
+          done
+          unzip -l watchfaces/installer/apk/watch-faces-companion.apk | grep -q "assets/default_watchface.apk"
+
+      - name: Commit APKs to the branch
+        if: github.event_name == 'push'
+        run: |
+          git add -A watchfaces/*/apk/
+          if git diff --cached --quiet; then
+            echo "APKs unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Build watch face APKs from ${GITHUB_SHA::7}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: watch-face-apks
+          path: watchfaces/*/apk/*.apk
+          if-no-files-found: error

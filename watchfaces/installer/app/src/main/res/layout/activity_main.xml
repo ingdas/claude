@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Watch Faces"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:lineSpacingMultiplier="1.15"
+            android:text="Sends Metro Rush and Hatched Hour to your Galaxy Watch over the normal Bluetooth connection. The watch needs One UI 8 Watch and the small “Watch Faces” companion, which you install once (setup below)." />
+
+        <TextView style="@style/Label" android:text="Send over Bluetooth" />
+
+        <Button
+            android:id="@+id/sendMetro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send Metro Rush" />
+
+        <Button
+            android:id="@+id/sendHatched"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Send Hatched Hour" />
+
+        <TextView
+            android:id="@+id/log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true"
+            android:textSize="13sp" />
+
+        <TextView style="@style/Label" android:text="One-time setup: install the companion" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingMultiplier="1.15"
+            android:text="Only needed once. This uses the watch's Wireless debugging over a direct Wi-Fi link — no internet needed: turn on your phone's hotspot and connect the watch to it (or use the same Wi-Fi).\n\nOn the watch:\n1. Settings › About watch › Software information › tap Software version 5×.\n2. Settings › Developer options › turn on ADB debugging and Wireless debugging.\n3. Tap Wireless debugging › Pair new device and enter what it shows below, then tap Pair.\n4. Back on Wireless debugging, enter the port next to the IP and tap Connect.\n5. Tap Install companion. Afterwards you can turn Wireless debugging off again." />
+
+        <EditText
+            android:id="@+id/host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:digits="0123456789."
+            android:hint="Watch IP address, e.g. 192.168.1.42"
+            android:inputType="text" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/pairPort"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Pairing port"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/pairCode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Pairing code"
+                android:inputType="number" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/pair"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pair" />
+
+        <EditText
+            android:id="@+id/connectPort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Port shown next to the IP on Wireless debugging"
+            android:inputType="number" />
+
+        <Button
+            android:id="@+id/connect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Connect" />
+
+        <Button
+            android:id="@+id/installCompanion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Install companion" />
+    </LinearLayout>
+</ScrollView>
