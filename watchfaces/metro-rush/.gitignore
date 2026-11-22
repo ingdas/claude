@@ -3,3 +3,4 @@ docs/build/
 build/
 app/build/
 local.properties
+__pycache__/
