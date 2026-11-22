@@ -150,7 +150,9 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
         worker.execute(() -> {
             try {
                 AdbManager.get(this).pair(h, Integer.parseInt(port), code);
-                say("Paired. Now enter the connection port and tap Connect.");
+                prefs.edit().putBoolean("paired", true).apply();
+                say("Paired ✔ Now enter the port shown next to the IP address on the Wireless debugging"
+                        + " screen and tap Connect.");
             } catch (Throwable t) {
                 say("Pairing failed: " + describe(t)
                         + "\nCheck the code hasn't expired (the pairing dialog must stay open on the watch).");
@@ -173,7 +175,18 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
                 if (adb.isConnected()) {
                     adb.disconnect();
                 }
-                adb.connect(h, Integer.parseInt(port));
+                // connect() returns false (instead of throwing) when the watch doesn't answer in time.
+                if (!adb.connect(h, Integer.parseInt(port)) && !adb.isConnected()) {
+                    say("The watch didn't answer within 15 s."
+                            + (prefs.getBoolean("paired", false) ? "" : "\nThis phone isn't paired yet:"
+                                + " on the watch tap Wireless debugging › Pair new device, enter that"
+                                + " port and 6-digit code above, tap Pair, then Connect again.")
+                            + "\nAlso check the port: it's the one next to the IP on the Wireless"
+                            + " debugging screen, and it changes whenever Wireless debugging is turned"
+                            + " off and on.");
+                    adb.disconnect();
+                    return;
+                }
                 String sdk = shell(adb, "getprop ro.build.version.sdk").trim();
                 String model = shell(adb, "getprop ro.product.model").trim();
                 say("Connected to " + model + " (API " + sdk + ").");
