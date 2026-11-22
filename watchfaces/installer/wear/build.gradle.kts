@@ -63,6 +63,10 @@ val tokenDir = layout.buildDirectory.dir("generated/pushTokens")
 val tokengen by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage::class.java, Usage.JAVA_RUNTIME))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements::class.java, LibraryElements.JAR))
+    }
 }
 dependencies { tokengen(project(":tokengen")) }
 
